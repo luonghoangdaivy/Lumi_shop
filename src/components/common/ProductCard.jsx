@@ -1,76 +1,56 @@
-import { Heart } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Heart } from "lucide-react";
 
-function ProductCard({ product, onAddToWishlist }) {
-  const {
-    id,
-    name,
-    image,
-    price,
-    oldPrice,
-    discount,
-    colors = [],
-    isNew = false,
-  } = product;
+import "../../styles/common/product-card.css";
 
-  const formatPrice = (value) => {
-    return new Intl.NumberFormat("vi-VN").format(value) + "đ";
-  };
+const API_URL = "http://localhost:4000";
+
+function ProductCard({ product, onFavorite }) {
+  const primaryImage =
+    product?.images?.find((image) => image.is_primary) || product?.images?.[0];
+
+  const imageUrl = primaryImage?.image_url
+    ? `${API_URL}${primaryImage.image_url}`
+    : "/placeholder-product.jpg";
+
+  const categoryName = product?.category?.name || "Sản phẩm";
+
+  const productPrice = Number(product?.price || 0);
 
   return (
     <article className="product-card">
-      {/* Image */}
-      <div className="product-card-image">
-        <Link to={`/products/${id}`}>
-          <img src={image} alt={name} />
+      <div className="product-card-image-wrapper">
+        <Link
+          to={`/products/${product.id}`}
+          className="product-card-image-link"
+        >
+          <img
+            src={imageUrl}
+            alt={product?.name || "Sản phẩm"}
+            className="product-card-image"
+          />
         </Link>
 
-        {/* Badge */}
-        {isNew && <span className="product-badge product-badge-new">NEW</span>}
-
-        {discount && (
-          <span className="product-badge product-badge-sale">-{discount}%</span>
-        )}
-
-        {/* Wishlist */}
         <button
-          className="product-wishlist"
-          onClick={() => onAddToWishlist?.(product)}
+          type="button"
+          className="product-card-favorite"
+          onClick={() => onFavorite?.(product)}
           aria-label="Thêm vào yêu thích"
         >
-          <Heart size={17} strokeWidth={1.7} />
+          <Heart size={18} strokeWidth={1.7} />
         </button>
       </div>
 
-      {/* Information */}
-      <div className="product-card-info">
-        <Link to={`/products/${id}`} className="product-card-name">
-          {name}
+      <div className="product-card-content">
+        <span className="product-card-category">{categoryName}</span>
+
+        <Link to={`/products/${product.id}`} className="product-card-name">
+          {product?.name}
         </Link>
 
-        {/* Colors */}
-        {colors.length > 0 && (
-          <div className="product-colors">
-            {colors.map((color, index) => (
-              <span
-                key={index}
-                className="product-color"
-                style={{
-                  backgroundColor: color,
-                }}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Price */}
-        <div className="product-price">
-          <span className="product-price-current">{formatPrice(price)}</span>
-
-          {oldPrice && (
-            <span className="product-price-old">{formatPrice(oldPrice)}</span>
-          )}
-        </div>
+        <p className="product-card-price">
+          {productPrice.toLocaleString("vi-VN")}₫
+        </p>
       </div>
     </article>
   );

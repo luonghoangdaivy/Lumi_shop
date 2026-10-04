@@ -1,17 +1,38 @@
-function Input({ label, placeholder, type = "text", value, onChange, error }) {
+import "../../styles/common/input.css";
+
+function Input({
+  label,
+  name,
+  type = "text",
+  value,
+  placeholder,
+  onChange,
+  error,
+  required = false,
+  disabled = false,
+}) {
   return (
-    <div className="form-group">
-      {label && <label className="form-label">{label}</label>}
+    <div className="common-input-group">
+      {label && (
+        <label htmlFor={name} className="common-input-label">
+          {label}
+
+          {required && <span className="common-input-required">*</span>}
+        </label>
+      )}
 
       <input
-        className={`form-input ${error ? "input-error" : ""}`}
+        id={name}
+        name={name}
         type={type}
-        placeholder={placeholder}
         value={value}
+        placeholder={placeholder}
         onChange={onChange}
+        disabled={disabled}
+        className={`common-input ${error ? "has-error" : ""}`}
       />
 
-      {error && <span className="form-error">{error}</span>}
+      {error && <span className="common-input-error">{error}</span>}
     </div>
   );
 }

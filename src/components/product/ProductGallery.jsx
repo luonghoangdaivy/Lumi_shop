@@ -1,37 +1,41 @@
-import { Heart } from "lucide-react";
+import { useState } from "react";
 
-function ProductGallery() {
-  const images = [
-    "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab",
-    "https://images.unsplash.com/photo-1503341504253-dff4815485f1",
-    "https://images.unsplash.com/photo-1529139574466-a303027c1d8b",
-    "https://images.unsplash.com/photo-1485968579580-b6d095142e6e",
-  ];
+const API_URL = "http://localhost:4000";
+
+function ProductGallery({ images = [], productName }) {
+  const primaryImage = images.find((image) => image.is_primary) || images[0];
+
+  const [selectedImage, setSelectedImage] = useState(
+    primaryImage?.image_url || "",
+  );
+
+  if (!images.length) {
+    return (
+      <div className="product-gallery">
+        <p>Chưa có hình ảnh sản phẩm</p>
+      </div>
+    );
+  }
 
   return (
     <div className="product-gallery">
-      <div className="product-thumbnails">
-        {images.map((image, index) => (
-          <button key={index} className="thumbnail">
-            <img
-              src={`${image}?auto=format&fit=crop&w=150&q=80`}
-              alt={`Product ${index + 1}`}
-            />
+      {/* Thumbnail */}
+      <div className="product-gallery-thumbnails">
+        {images.map((image) => (
+          <button
+            key={image.id}
+            type="button"
+            onClick={() => setSelectedImage(image.image_url)}
+            className={selectedImage === image.image_url ? "active" : ""}
+          >
+            <img src={`${API_URL}${image.image_url}`} alt={productName} />
           </button>
         ))}
       </div>
 
-      <div className="product-main-image">
-        <img
-          src={`${images[0]}?auto=format&fit=crop&w=900&q=85`}
-          alt="Áo thun basic"
-        />
-
-        <button className="product-wishlist">
-          <Heart size={20} />
-        </button>
-
-        <span className="product-sale">-20%</span>
+      {/* Main image */}
+      <div className="product-gallery-main">
+        <img src={`${API_URL}${selectedImage}`} alt={productName} />
       </div>
     </div>
   );

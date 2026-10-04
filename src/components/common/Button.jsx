@@ -1,21 +1,27 @@
+import "../../styles/common/button.css";
+
 function Button({
   children,
-  variant = "primary",
-  size = "md",
   type = "button",
+  variant = "primary",
+  size = "medium",
   fullWidth = false,
   disabled = false,
   onClick,
 }) {
+  const className = [
+    "common-button",
+    `common-button-${variant}`,
+    `common-button-${size}`,
+    fullWidth ? "common-button-full" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <button
       type={type}
-      className={`
-        btn
-        btn-${variant}
-        btn-${size}
-        ${fullWidth ? "btn-full" : ""}
-      `}
+      className={className}
       disabled={disabled}
       onClick={onClick}
     >

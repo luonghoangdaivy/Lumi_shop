@@ -1,3 +1,5 @@
+import "../../styles/common/badge.css";
+
 function Badge({ children, variant = "default" }) {
   return <span className={`badge badge-${variant}`}>{children}</span>;
 }

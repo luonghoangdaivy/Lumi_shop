@@ -1,0 +1,28 @@
+.section-title {
+  margin-bottom: var(--spacing-xl);
+}
+
+.section-title h2 {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.2;
+}
+
+.section-title p {
+  margin-top: 8px;
+  color: var(--color-text-light);
+  font-size: var(--font-size-sm);
+}
+
+.section-title-left {
+  text-align: left;
+}
+
+.section-title-center {
+  text-align: center;
+}
+
+.section-title-right {
+  text-align: right;
+}

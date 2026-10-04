@@ -1,101 +1,230 @@
-import { Minus, Plus, ShoppingBag, Zap } from "lucide-react";
-import Button from "../common/Button";
+import { useEffect, useState } from "react";
+import { addToCart } from "../../api/cart.api";
 
-function ProductInfo() {
+function ProductInfo({ product }) {
+  const [selectedColor, setSelectedColor] = useState("");
+  const [selectedSize, setSelectedSize] = useState("");
+
+  const [quantity, setQuantity] = useState(1);
+
+  const [addingToCart, setAddingToCart] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const variants = product.variants || [];
+
+  // ==========================
+  // COLORS
+  // ==========================
+
+  const colors = [...new Set(variants.map((variant) => variant.color))];
+
+  // ==========================
+  // SET DEFAULT COLOR
+  // ==========================
+
+  useEffect(() => {
+    if (variants.length > 0) {
+      setSelectedColor(variants[0].color);
+      setSelectedSize(variants[0].size);
+    }
+  }, [product]);
+
+  // ==========================
+  // SIZES
+  // ==========================
+
+  const sizes = [
+    ...new Set(
+      variants
+        .filter((variant) => variant.color === selectedColor)
+        .map((variant) => variant.size),
+    ),
+  ];
+
+  // ==========================
+  // SELECTED VARIANT
+  // ==========================
+
+  const selectedVariant = variants.find(
+    (variant) =>
+      variant.color === selectedColor && variant.size === selectedSize,
+  );
+
+  // ==========================
+  // CHANGE COLOR
+  // ==========================
+
+  const handleColorChange = (color) => {
+    setSelectedColor(color);
+
+    const firstVariant = variants.find((variant) => variant.color === color);
+
+    setSelectedSize(firstVariant?.size || "");
+
+    setQuantity(1);
+    setMessage("");
+  };
+
+  // ==========================
+  // ADD TO CART
+  // ==========================
+
+  const handleAddToCart = async () => {
+    if (!selectedVariant) {
+      setMessage("Vui lòng chọn màu và kích thước");
+      return;
+    }
+
+    if (selectedVariant.stock <= 0) {
+      setMessage("Sản phẩm đã hết hàng");
+      return;
+    }
+
+    if (quantity > selectedVariant.stock) {
+      setMessage(`Chỉ còn ${selectedVariant.stock} sản phẩm`);
+      return;
+    }
+
+    try {
+      setAddingToCart(true);
+      setMessage("");
+
+      const response = await addToCart(selectedVariant.id, quantity);
+
+      console.log("Add cart:", response);
+
+      setMessage("Đã thêm sản phẩm vào giỏ hàng");
+    } catch (error) {
+      console.error("Add cart error:", error);
+
+      setMessage(
+        error.response?.data?.message || "Không thể thêm sản phẩm vào giỏ hàng",
+      );
+    } finally {
+      setAddingToCart(false);
+    }
+  };
+
   return (
     <div className="product-info">
-      <span className="product-category">Áo thun</span>
+      {/* Category */}
+      <p className="product-category">{product.category?.name}</p>
 
-      <h1>Áo thun basic</h1>
+      {/* Name */}
+      <h1>{product.name}</h1>
 
-      <div className="product-rating">
-        <span>★★★★★</span>
-        <span>(128 đánh giá)</span>
-      </div>
-
-      <div className="product-price">
-        <strong>199.000đ</strong>
-
-        <span className="old-price">250.000đ</span>
-
-        <span className="discount">-20%</span>
-      </div>
-
-      <p className="product-short-description">
-        Áo thun basic form rộng với chất liệu cotton mềm mại, thoáng mát. Thiết
-        kế tối giản phù hợp với phong cách unisex.
+      {/* Price */}
+      <p className="product-price">
+        {Number(product.price).toLocaleString("vi-VN")} ₫
       </p>
 
       {/* Color */}
-      <div className="product-option">
-        <div className="option-header">
-          <span>Màu sắc</span>
-          <strong>Trắng</strong>
-        </div>
+      {colors.length > 0 && (
+        <div className="product-option">
+          <h3>Màu sắc</h3>
 
-        <div className="color-options">
-          <button className="color-option white"></button>
-          <button className="color-option black"></button>
-          <button className="color-option brown"></button>
+          <div className="product-options">
+            {colors.map((color) => (
+              <button
+                key={color}
+                type="button"
+                className={selectedColor === color ? "selected" : ""}
+                onClick={() => handleColorChange(color)}
+              >
+                {color}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Size */}
-      <div className="product-option">
-        <div className="option-header">
-          <span>Kích thước</span>
+      {sizes.length > 0 && (
+        <div className="product-option">
+          <h3>Kích thước</h3>
 
-          <button className="size-guide">Hướng dẫn chọn size</button>
-        </div>
+          <div className="product-options">
+            {sizes.map((size) => {
+              const variant = variants.find(
+                (item) => item.color === selectedColor && item.size === size,
+              );
 
-        <div className="size-options">
-          <button>XS</button>
-          <button>S</button>
-          <button className="active">M</button>
-          <button>L</button>
-          <button>XL</button>
+              const outOfStock = !variant || variant.stock <= 0;
+
+              return (
+                <button
+                  key={size}
+                  type="button"
+                  disabled={outOfStock}
+                  className={selectedSize === size ? "selected" : ""}
+                  onClick={() => {
+                    setSelectedSize(size);
+                    setQuantity(1);
+                    setMessage("");
+                  }}
+                >
+                  {size}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Stock */}
+      {selectedVariant && (
+        <p className="product-stock">
+          {selectedVariant.stock > 0
+            ? `Còn ${selectedVariant.stock} sản phẩm`
+            : "Hết hàng"}
+        </p>
+      )}
 
       {/* Quantity */}
-      <div className="product-option">
-        <div className="option-header">
-          <span>Số lượng</span>
+      <div className="product-quantity">
+        <h3>Số lượng</h3>
 
-          <span className="stock">Còn 15 sản phẩm</span>
-        </div>
-
-        <div className="quantity">
-          <button>
-            <Minus size={16} />
+        <div className="quantity-control">
+          <button
+            type="button"
+            disabled={quantity <= 1}
+            onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
+          >
+            -
           </button>
 
-          <span>1</span>
+          <span>{quantity}</span>
 
-          <button>
-            <Plus size={16} />
+          <button
+            type="button"
+            disabled={!selectedVariant || quantity >= selectedVariant.stock}
+            onClick={() =>
+              setQuantity((prev) => Math.min(selectedVariant.stock, prev + 1))
+            }
+          >
+            +
           </button>
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="product-actions">
-        <Button className="add-cart">
-          <ShoppingBag size={18} />
-          Thêm vào giỏ hàng
-        </Button>
+      {/* Add cart */}
+      <button
+        type="button"
+        className="add-to-cart-button"
+        disabled={
+          addingToCart || !selectedVariant || selectedVariant.stock <= 0
+        }
+        onClick={handleAddToCart}
+      >
+        {addingToCart
+          ? "Đang thêm..."
+          : selectedVariant?.stock > 0
+            ? "Thêm vào giỏ hàng"
+            : "Hết hàng"}
+      </button>
 
-        <Button className="buy-now">
-          <Zap size={18} />
-          Mua ngay
-        </Button>
-      </div>
-
-      <div className="product-benefits">
-        <span>✓ Miễn phí vận chuyển</span>
-        <span>✓ Đổi trả trong 7 ngày</span>
-        <span>✓ Kiểm tra hàng khi nhận</span>
-      </div>
+      {/* Message */}
+      {message && <p className="cart-message">{message}</p>}
     </div>
   );
 }
