@@ -1,0 +1,148 @@
+.category-section {
+  padding: 90px 0;
+}
+
+.category-heading {
+  margin-bottom: 40px;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 30px;
+}
+
+.category-eyebrow {
+  display: block;
+
+  margin-bottom: 12px;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  letter-spacing: 2px;
+
+  color: var(--color-text-light);
+}
+
+.category-heading h2 {
+  margin: 0;
+
+  font-size: 36px;
+  line-height: 1.2;
+}
+
+.category-heading > p {
+  max-width: 380px;
+
+  margin: 0;
+
+  color: var(--color-text-light);
+
+  line-height: 1.6;
+}
+
+.category-grid {
+  display: grid;
+
+  grid-template-columns: repeat(4, 1fr);
+
+  gap: 16px;
+}
+
+.category-card {
+  position: relative;
+
+  min-height: 220px;
+
+  padding: 28px;
+
+  display: flex;
+  flex-direction: column;
+
+  justify-content: space-between;
+
+  background: var(--color-background-light);
+
+  border: 1px solid transparent;
+
+  transition:
+    transform var(--transition),
+    background var(--transition),
+    border-color var(--transition);
+}
+
+.category-card:hover {
+  transform: translateY(-4px);
+
+  background: var(--color-white);
+
+  border-color: var(--color-border);
+}
+
+.category-card-icon {
+  width: 56px;
+  height: 56px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: var(--color-white);
+
+  border-radius: 50%;
+}
+
+.category-card-content h3 {
+  margin: 0 0 6px;
+
+  font-size: 20px;
+}
+
+.category-card-content p {
+  margin: 0;
+
+  color: var(--color-text-light);
+
+  font-size: 13px;
+}
+
+.category-card-arrow {
+  position: absolute;
+
+  right: 24px;
+  bottom: 24px;
+
+  font-size: 22px;
+
+  transition: transform var(--transition);
+}
+
+.category-card:hover .category-card-arrow {
+  transform: translateX(5px);
+}
+
+@media (max-width: 900px) {
+  .category-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .category-section {
+    padding: 60px 0;
+  }
+
+  .category-heading {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .category-heading h2 {
+    font-size: 30px;
+  }
+
+  .category-grid {
+    grid-template-columns: 1fr;
+  }
+}

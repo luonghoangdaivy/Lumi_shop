@@ -1,41 +1,49 @@
-import { useState } from "react";
+import "../../styles/product-detail/product-gallery.css";
 
 const API_URL = "http://localhost:4000";
 
-function ProductGallery({ images = [], productName }) {
-  const primaryImage = images.find((image) => image.is_primary) || images[0];
+function ProductGallery({
+  images = [],
+  selectedImage,
+  onSelectImage,
+  productName,
+}) {
+  const imageList = images || [];
 
-  const [selectedImage, setSelectedImage] = useState(
-    primaryImage?.image_url || "",
-  );
+  const mainImage =
+    selectedImage ||
+    imageList.find((image) => image.is_primary) ||
+    imageList[0];
 
-  if (!images.length) {
+  if (!mainImage) {
     return (
       <div className="product-gallery">
-        <p>Chưa có hình ảnh sản phẩm</p>
+        <div className="product-gallery-main empty">Không có hình ảnh</div>
       </div>
     );
   }
 
   return (
     <div className="product-gallery">
-      {/* Thumbnail */}
       <div className="product-gallery-thumbnails">
-        {images.map((image) => (
+        {imageList.map((image) => (
           <button
             key={image.id}
             type="button"
-            onClick={() => setSelectedImage(image.image_url)}
-            className={selectedImage === image.image_url ? "active" : ""}
+            className={
+              mainImage.id === image.id
+                ? "product-gallery-thumbnail active"
+                : "product-gallery-thumbnail"
+            }
+            onClick={() => onSelectImage(image)}
           >
             <img src={`${API_URL}${image.image_url}`} alt={productName} />
           </button>
         ))}
       </div>
 
-      {/* Main image */}
       <div className="product-gallery-main">
-        <img src={`${API_URL}${selectedImage}`} alt={productName} />
+        <img src={`${API_URL}${mainImage.image_url}`} alt={productName} />
       </div>
     </div>
   );

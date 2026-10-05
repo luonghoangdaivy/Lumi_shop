@@ -1,81 +1,248 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 
+import { getCart } from "../api/cart.api";
 import { createOrder } from "../api/order.api";
+
+import "../styles/checkout/checkout.css";
+
+const API_URL = "http://localhost:4000";
 
 function Checkout() {
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({
-    shipping_address: "",
-    shipping_phone: "",
-    payment_method: "COD",
+  const [cart, setCart] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  const [formData, setFormData] = useState({
+    receiver_name: "",
+    phone: "",
+    address: "",
   });
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  // =========================
+  // GET CART
+  // =========================
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  useEffect(() => {
+    const fetchCart = async () => {
+      try {
+        setLoading(true);
+        setError("");
 
-    setForm((prev) => ({
+        const response = await getCart();
+
+        setCart(response?.data || response);
+      } catch (error) {
+        console.error("Get cart error:", error);
+
+        setError(
+          error.response?.data?.message || "Không thể tải thông tin giỏ hàng.",
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCart();
+  }, []);
+
+  // =========================
+  // CART DATA
+  // =========================
+
+  const items = cart?.items || [];
+
+  const getItemImage = (item) => {
+    const images = item?.variant?.product?.images || [];
+
+    const primaryImage = images.find((image) => image.is_primary) || images[0];
+
+    return primaryImage?.image_url
+      ? `${API_URL}${primaryImage.image_url}`
+      : "/placeholder-product.jpg";
+  };
+
+  const getItemPrice = (item) => {
+    return Number(item?.variant?.product?.price || 0);
+  };
+
+  const subtotal = items.reduce((total, item) => {
+    const price = getItemPrice(item);
+    const quantity = Number(item.quantity || 0);
+
+    return total + price * quantity;
+  }, 0);
+
+  const shippingFee = items.length > 0 ? 30000 : 0;
+
+  const total = subtotal + shippingFee;
+
+  // =========================
+  // HANDLE FORM
+  // =========================
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // =========================
+  // CREATE ORDER
+  // =========================
 
-    console.log("========== CREATE ORDER ==========");
-    console.log("Form:", form);
+  const handleSubmit = async (event) => {
+    event.preventDefault();
 
-    // Kiểm tra dữ liệu
-    if (!form.shipping_address.trim()) {
-      setError("Vui lòng nhập địa chỉ nhận hàng");
+    // Validate họ tên
+    if (!formData.receiver_name.trim()) {
+      alert("Vui lòng nhập họ tên người nhận.");
       return;
     }
 
-    if (!form.shipping_phone.trim()) {
-      setError("Vui lòng nhập số điện thoại");
+    // Validate số điện thoại
+    if (!formData.phone.trim()) {
+      alert("Vui lòng nhập số điện thoại.");
+      return;
+    }
+
+    // Validate địa chỉ
+    if (!formData.address.trim()) {
+      alert("Vui lòng nhập địa chỉ nhận hàng.");
       return;
     }
 
     try {
-      setLoading(true);
-      setError("");
-      setSuccess("");
+      setSubmitting(true);
 
-      console.log("Đang gọi POST /orders...");
+      // =========================
+      // DATA GỬI BACKEND
+      // =========================
 
-      const response = await createOrder(form);
+      const orderData = {
+        shipping_address: formData.address,
+        shipping_phone: formData.phone,
+        payment_method: "COD",
+      };
 
-      console.log("Create order response:", response);
+      console.log("Order data:", orderData);
 
-      if (response?.data) {
-        localStorage.setItem("lastOrder", JSON.stringify(response.data));
-      }
+      const response = await createOrder(orderData);
 
-      setSuccess("Đặt hàng thành công!");
+      console.log("Order response:", response);
 
-      // Chuyển trang sau khi tạo order thành công
-      setTimeout(() => {
-        navigate("/order-success");
-      }, 500);
+      const order = response?.data || response;
+
+      // Chuyển sang trang đặt hàng thành công
+      navigate("/order-success", {
+        state: {
+          order,
+        },
+      });
     } catch (error) {
-      console.error("CREATE ORDER ERROR:", error);
+      console.error("Create order error:", error);
 
-      console.log("Backend response:", error.response?.data);
+      console.error("Backend response:", error.response?.data);
 
-      setError(error.response?.data?.message || "Không thể tạo đơn hàng");
+      alert(
+        error.response?.data?.message ||
+          "Không thể đặt hàng. Vui lòng thử lại.",
+      );
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
+
+  // =========================
+  // LOADING
+  // =========================
+
+  if (loading) {
+    return (
+      <>
+        <Header />
+
+        <main className="checkout-page">
+          <div className="container checkout-status">
+            Đang tải thông tin thanh toán...
+          </div>
+        </main>
+
+        <Footer />
+      </>
+    );
+  }
+
+  // =========================
+  // ERROR
+  // =========================
+
+  if (error) {
+    return (
+      <>
+        <Header />
+
+        <main className="checkout-page">
+          <div className="container checkout-status checkout-error">
+            {error}
+          </div>
+        </main>
+
+        <Footer />
+      </>
+    );
+  }
+
+  // =========================
+  // EMPTY CART
+  // =========================
+
+  if (items.length === 0) {
+    return (
+      <>
+        <Header />
+
+        <main className="checkout-page">
+          <div className="container">
+            <div className="checkout-breadcrumb">
+              <span>Trang chủ</span>
+              <span>/</span>
+              <span>Thanh toán</span>
+            </div>
+
+            <div className="checkout-empty">
+              <h1>Giỏ hàng đang trống</h1>
+
+              <p>Bạn cần có sản phẩm trong giỏ hàng trước khi thanh toán.</p>
+
+              <button
+                type="button"
+                className="checkout-primary-button"
+                onClick={() => navigate("/products")}
+              >
+                Tiếp tục mua sắm
+              </button>
+            </div>
+          </div>
+        </main>
+
+        <Footer />
+      </>
+    );
+  }
+
+  // =========================
+  // CHECKOUT
+  // =========================
 
   return (
     <>
@@ -83,98 +250,229 @@ function Checkout() {
 
       <main className="checkout-page">
         <div className="container">
+          {/* BREADCRUMB */}
+
           <div className="checkout-breadcrumb">
-            Trang chủ / Giỏ hàng / Thanh toán
+            <span>Trang chủ</span>
+            <span>/</span>
+            <span>Giỏ hàng</span>
+            <span>/</span>
+            <span>Thanh toán</span>
           </div>
 
-          <h1>Thanh toán</h1>
+          {/* HEADING */}
 
-          {/* ERROR */}
+          <div className="checkout-heading">
+            <h1>Thanh toán</h1>
 
-          {error && <div className="checkout-error">{error}</div>}
+            <p>Hoàn tất thông tin để đặt hàng.</p>
+          </div>
 
-          {/* SUCCESS */}
+          <form className="checkout-layout" onSubmit={handleSubmit}>
+            {/* =================================
+                LEFT
+            ================================= */}
 
-          {success && <div className="checkout-success">{success}</div>}
+            <section className="checkout-main">
+              {/* THÔNG TIN NHẬN HÀNG */}
 
-          <form className="checkout-form" onSubmit={handleSubmit}>
-            {/* =========================
-                SHIPPING INFORMATION
-            ========================= */}
+              <div className="checkout-card">
+                <div className="checkout-card-header">
+                  <h2>Thông tin nhận hàng</h2>
+                </div>
 
-            <section className="checkout-section">
-              <h2>Thông tin nhận hàng</h2>
+                <div className="checkout-form">
+                  {/* HỌ TÊN */}
 
-              <div className="form-group">
-                <label htmlFor="shipping_address">Địa chỉ nhận hàng</label>
+                  <div className="checkout-form-group">
+                    <label htmlFor="receiver_name">Họ và tên</label>
 
-                <textarea
-                  id="shipping_address"
-                  name="shipping_address"
-                  value={form.shipping_address}
-                  onChange={handleChange}
-                  placeholder="Ví dụ: 123 Nguyễn Văn Linh, Hải Châu, Đà Nẵng"
-                  rows="4"
-                />
+                    <input
+                      id="receiver_name"
+                      name="receiver_name"
+                      type="text"
+                      value={formData.receiver_name}
+                      onChange={handleChange}
+                      placeholder="Nhập họ và tên"
+                    />
+                  </div>
+
+                  {/* SỐ ĐIỆN THOẠI */}
+
+                  <div className="checkout-form-group">
+                    <label htmlFor="phone">Số điện thoại</label>
+
+                    <input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      placeholder="Nhập số điện thoại"
+                    />
+                  </div>
+
+                  {/* ĐỊA CHỈ */}
+
+                  <div className="checkout-form-group">
+                    <label htmlFor="address">Địa chỉ nhận hàng</label>
+
+                    <textarea
+                      id="address"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleChange}
+                      placeholder="Nhập địa chỉ nhận hàng"
+                      rows="4"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="shipping_phone">Số điện thoại</label>
+              {/* PHƯƠNG THỨC THANH TOÁN */}
 
-                <input
-                  id="shipping_phone"
-                  type="tel"
-                  name="shipping_phone"
-                  value={form.shipping_phone}
-                  onChange={handleChange}
-                  placeholder="Nhập số điện thoại"
-                />
+              <div className="checkout-card">
+                <div className="checkout-card-header">
+                  <h2>Phương thức thanh toán</h2>
+                </div>
+
+                <div className="checkout-payment">
+                  <label className="checkout-payment-option">
+                    <input
+                      type="radio"
+                      name="payment"
+                      value="COD"
+                      defaultChecked
+                    />
+
+                    <span className="checkout-payment-content">
+                      <strong>Thanh toán khi nhận hàng</strong>
+
+                      <small>
+                        Thanh toán bằng tiền mặt khi nhận được hàng.
+                      </small>
+                    </span>
+                  </label>
+                </div>
               </div>
             </section>
 
-            {/* =========================
-                PAYMENT
-            ========================= */}
+            {/* =================================
+                RIGHT
+            ================================= */}
 
-            <section className="checkout-section">
-              <h2>Phương thức thanh toán</h2>
+            <aside className="checkout-summary">
+              <div className="checkout-card">
+                {/* HEADER */}
 
-              <label className="payment-option">
-                <input
-                  type="radio"
-                  name="payment_method"
-                  value="COD"
-                  checked={form.payment_method === "COD"}
-                  onChange={handleChange}
-                />
+                <div className="checkout-card-header">
+                  <h2>Đơn hàng</h2>
 
-                <span>Thanh toán khi nhận hàng (COD)</span>
-              </label>
+                  <span>{items.length} sản phẩm</span>
+                </div>
 
-              <label className="payment-option">
-                <input
-                  type="radio"
-                  name="payment_method"
-                  value="ONLINE"
-                  checked={form.payment_method === "ONLINE"}
-                  onChange={handleChange}
-                />
+                {/* PRODUCTS */}
 
-                <span>Thanh toán online</span>
-              </label>
-            </section>
+                <div className="checkout-products">
+                  {items.map((item) => {
+                    const product = item?.variant?.product;
 
-            {/* =========================
-                SUBMIT
-            ========================= */}
+                    const price = getItemPrice(item);
 
-            <button
-              type="submit"
-              className="place-order-button"
-              disabled={loading}
-            >
-              {loading ? "Đang đặt hàng..." : "Đặt hàng"}
-            </button>
+                    const quantity = Number(item.quantity || 0);
+
+                    const itemTotal = price * quantity;
+
+                    return (
+                      <div className="checkout-product" key={item.id}>
+                        {/* IMAGE */}
+
+                        <div className="checkout-product-image">
+                          <img
+                            src={getItemImage(item)}
+                            alt={product?.name || "Sản phẩm"}
+                          />
+
+                          <span>{quantity}</span>
+                        </div>
+
+                        {/* INFO */}
+
+                        <div className="checkout-product-info">
+                          <h3>{product?.name || "Sản phẩm"}</h3>
+
+                          <p>
+                            {item?.variant?.color &&
+                              `Màu: ${item.variant.color}`}
+
+                            {item?.variant?.color &&
+                              item?.variant?.size &&
+                              " • "}
+
+                            {item?.variant?.size &&
+                              `Size: ${item.variant.size}`}
+                          </p>
+                        </div>
+
+                        {/* PRICE */}
+
+                        <strong>{itemTotal.toLocaleString("vi-VN")}₫</strong>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* SUMMARY */}
+
+                <div className="checkout-summary-content">
+                  {/* SUBTOTAL */}
+
+                  <div className="checkout-summary-row">
+                    <span>Tạm tính</span>
+
+                    <strong>{subtotal.toLocaleString("vi-VN")}₫</strong>
+                  </div>
+
+                  {/* SHIPPING */}
+
+                  <div className="checkout-summary-row">
+                    <span>Phí vận chuyển</span>
+
+                    <strong>{shippingFee.toLocaleString("vi-VN")}₫</strong>
+                  </div>
+
+                  <div className="checkout-summary-divider" />
+
+                  {/* TOTAL */}
+
+                  <div className="checkout-summary-total">
+                    <span>Tổng cộng</span>
+
+                    <strong>{total.toLocaleString("vi-VN")}₫</strong>
+                  </div>
+
+                  {/* SUBMIT */}
+
+                  <button
+                    type="submit"
+                    className="checkout-submit-button"
+                    disabled={submitting}
+                  >
+                    {submitting ? "Đang xử lý..." : "Đặt hàng"}
+                  </button>
+
+                  {/* BACK */}
+
+                  <button
+                    type="button"
+                    className="checkout-back-button"
+                    onClick={() => navigate("/cart")}
+                  >
+                    Quay lại giỏ hàng
+                  </button>
+                </div>
+              </div>
+            </aside>
           </form>
         </div>
       </main>

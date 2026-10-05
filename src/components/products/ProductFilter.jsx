@@ -1,110 +1,69 @@
-function ProductFilter() {
+import "../../styles/products/product-filter.css";
+
+function ProductFilter({
+  searchValue,
+  onSearchChange,
+  category,
+  onCategoryChange,
+  productCount,
+}) {
+  const categories = [
+    {
+      value: "all",
+      label: "Tất cả",
+    },
+    {
+      value: "ao",
+      label: "Áo",
+    },
+    {
+      value: "quan",
+      label: "Quần",
+    },
+    {
+      value: "vay",
+      label: "Váy",
+    },
+    {
+      value: "ao-khoac",
+      label: "Áo khoác",
+    },
+  ];
+
   return (
-    <aside className="product-filter">
-      <div className="filter-group">
-        <h3>Danh mục</h3>
-
-        <label>
-          <input type="checkbox" />
-          Áo
-        </label>
-
-        <label>
-          <input type="checkbox" />
-          Quần
-        </label>
-
-        <label>
-          <input type="checkbox" />
-          Váy
-        </label>
-
-        <label>
-          <input type="checkbox" />
-          Áo khoác
-        </label>
-
-        <label>
-          <input type="checkbox" />
-          Phụ kiện
-        </label>
+    <div className="product-filter">
+      <div className="product-filter-left">
+        <span className="product-filter-count">{productCount} sản phẩm</span>
       </div>
 
-      <div className="filter-group">
-        <h3>Thương hiệu</h3>
+      <div className="product-filter-right">
+        <div className="product-filter-search">
+          <input
+            type="text"
+            value={searchValue}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Tìm kiếm sản phẩm..."
+          />
+        </div>
 
-        <label>
-          <input type="checkbox" />
-          Adidas
-        </label>
-
-        <label>
-          <input type="checkbox" />
-          Zara
-        </label>
-
-        <label>
-          <input type="checkbox" />
-          Uniqlo
-        </label>
-
-        <label>
-          <input type="checkbox" />
-          Nike
-        </label>
-      </div>
-
-      <div className="filter-group">
-        <h3>Khoảng giá</h3>
-
-        <label>
-          <input type="checkbox" />
-          Dưới 300.000đ
-        </label>
-
-        <label>
-          <input type="checkbox" />
-          300.000đ - 400.000đ
-        </label>
-
-        <label>
-          <input type="checkbox" />
-          400.000đ - 600.000đ
-        </label>
-
-        <label>
-          <input type="checkbox" />
-          Trên 600.000đ
-        </label>
-      </div>
-
-      <div className="filter-group">
-        <h3>Màu sắc</h3>
-
-        <div className="color-options">
-          <span className="color-dot black"></span>
-          <span className="color-dot white"></span>
-          <span className="color-dot brown"></span>
-          <span className="color-dot blue"></span>
-          <span className="color-dot red"></span>
+        <div className="product-filter-categories">
+          {categories.map((item) => (
+            <button
+              key={item.value}
+              type="button"
+              className={
+                category === item.value
+                  ? "product-filter-category active"
+                  : "product-filter-category"
+              }
+              onClick={() => onCategoryChange(item.value)}
+            >
+              {item.label}
+            </button>
+          ))}
         </div>
       </div>
-
-      <div className="filter-group">
-        <h3>Size</h3>
-
-        <div className="size-options">
-          <button>XS</button>
-          <button>S</button>
-          <button>M</button>
-          <button>L</button>
-          <button>XL</button>
-          <button>XXL</button>
-        </div>
-      </div>
-
-      <button className="filter-button">Lọc sản phẩm</button>
-    </aside>
+    </div>
   );
 }
 

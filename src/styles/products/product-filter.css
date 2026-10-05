@@ -1,0 +1,124 @@
+.product-filter {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 30px;
+
+  padding: 20px 0;
+
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.product-filter-left {
+  flex-shrink: 0;
+}
+
+.product-filter-count {
+  color: var(--color-text-light);
+  font-size: var(--font-size-sm);
+}
+
+.product-filter-right {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.product-filter-search {
+  width: 220px;
+}
+
+.product-filter-search input {
+  width: 100%;
+  height: 38px;
+
+  padding: 0 12px;
+
+  border: 1px solid var(--color-border-dark);
+  border-radius: var(--radius-sm);
+
+  color: var(--color-text);
+  background: var(--color-white);
+
+  font-size: var(--font-size-sm);
+}
+
+.product-filter-search input:focus {
+  border-color: var(--color-black);
+}
+
+.product-filter-categories {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.product-filter-category {
+  position: relative;
+
+  padding: 5px 0;
+
+  color: var(--color-text-light);
+
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+
+  transition: color var(--transition);
+}
+
+.product-filter-category:hover {
+  color: var(--color-black);
+}
+
+.product-filter-category.active {
+  color: var(--color-black);
+  font-weight: var(--font-weight-semibold);
+}
+
+.product-filter-category.active::after {
+  content: "";
+
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: 1px;
+
+  background: var(--color-black);
+}
+
+@media (max-width: 900px) {
+  .product-filter {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .product-filter-right {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 18px;
+  }
+
+  .product-filter-search {
+    width: 100%;
+  }
+
+  .product-filter-categories {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+}
+
+@media (max-width: 600px) {
+  .product-filter {
+    padding: 16px 0;
+  }
+
+  .product-filter-categories {
+    gap: 18px;
+  }
+}

@@ -1,31 +1,62 @@
-import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
+import "../../styles/home/hero.css";
 
 function Hero() {
+  const navigate = useNavigate();
+
   return (
     <section className="hero">
-      <div className="hero-image">
-        <div className="hero-overlay" />
-
+      <div className="hero-container">
         <div className="hero-content">
-          <span className="hero-eyebrow">Lumi Collection</span>
+          <span className="hero-eyebrow">NEW COLLECTION 2026</span>
 
-          <h1>NEW SEASON</h1>
+          <h1 className="hero-title">
+            Phong cách
+            <br />
+            dành riêng cho bạn
+          </h1>
 
-          <p>Phong cách mới, lựa chọn chính mình</p>
+          <p className="hero-description">
+            Khám phá những thiết kế thời trang hiện đại, tối giản và phù hợp với
+            phong cách của bạn.
+          </p>
 
-          <Link to="/products" className="hero-button">
-            Mua ngay
-            <ArrowRight size={15} />
-          </Link>
+          <div className="hero-actions">
+            <button
+              type="button"
+              className="hero-primary-button"
+              onClick={() => navigate("/products")}
+            >
+              Khám phá ngay
+              <ArrowRight size={18} />
+            </button>
+
+            <button
+              type="button"
+              className="hero-secondary-button"
+              onClick={() => navigate("/products?category=ao")}
+            >
+              Bộ sưu tập
+            </button>
+          </div>
         </div>
 
-        <div className="hero-slide-control">
-          <button aria-label="Slide trước">‹</button>
+        <div className="hero-image-wrapper">
+          <div className="hero-image">
+            <img src="/images/hero.jpg" alt="Lumi Fashion Collection" />
+          </div>
 
-          <span>01 / 03</span>
+          <div className="hero-floating-card">
+            <span className="hero-floating-label">LUMI</span>
 
-          <button aria-label="Slide tiếp theo">›</button>
+            <strong>
+              Everyday
+              <br />
+              Essentials
+            </strong>
+          </div>
         </div>
       </div>
     </section>

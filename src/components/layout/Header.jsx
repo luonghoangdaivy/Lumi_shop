@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { Search, ShoppingBag, User, Heart, Menu, X } from "lucide-react";
+import { useCart } from "../../context/CartContext";
 
 import "../../styles/layout/header.css";
 
@@ -10,6 +11,7 @@ function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+  const { cartCount } = useCart();
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -124,7 +126,7 @@ function Header() {
             >
               <ShoppingBag size={20} strokeWidth={1.7} />
 
-              <span className="header-cart-count">0</span>
+              <span className="header-cart-count">{cartCount}</span>
             </button>
           </div>
         </div>
