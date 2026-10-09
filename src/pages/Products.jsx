@@ -1,28 +1,41 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
-import Header from "../components/layout/Header";
-import Footer from "../components/layout/Footer";
 import ProductFilter from "../components/products/ProductFilter";
 import ProductGrid from "../components/products/ProductGrid";
 
 import { getProducts } from "../api/product.api";
 
 import "../styles/products/products.css";
+import "../styles/products/product-filter.css";
+import "../styles/products/product-grid.css";
 
 function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
 
+  // =========================
+  // URL FILTER
+  // =========================
+
+  const search = searchParams.get("search") || "";
+
+  const category = searchParams.get("category") || "";
+
+  // =========================
+  // STATE
+  // =========================
+
   const [products, setProducts] = useState([]);
+
   const [loading, setLoading] = useState(true);
+
   const [error, setError] = useState("");
 
-  const searchFromUrl = searchParams.get("search") || "";
-  const categoryFromUrl = searchParams.get("category") || "all";
+  const [priceRange, setPriceRange] = useState("all");
 
-  const [searchValue, setSearchValue] = useState(searchFromUrl);
-
-  const [category, setCategory] = useState(categoryFromUrl);
+  // =========================
+  // GET PRODUCTS
+  // =========================
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -32,13 +45,17 @@ function Products() {
 
         const response = await getProducts();
 
-        const productData = response?.data || [];
+        const data = response?.data || response;
 
-        setProducts(productData);
+        if (Array.isArray(data)) {
+          setProducts(data);
+        } else {
+          setProducts([]);
+        }
       } catch (error) {
         console.error("Get products error:", error);
 
-        setError("Không thể tải danh sách sản phẩm.");
+        setError("Không thể tải danh sách sản phẩm");
       } finally {
         setLoading(false);
       }
@@ -47,135 +64,169 @@ function Products() {
     fetchProducts();
   }, []);
 
-  /*
-   * Đồng bộ search trên URL
-   * với state của component
-   */
-  useEffect(() => {
-    setSearchValue(searchFromUrl);
-  }, [searchFromUrl]);
+  // =========================
+  // CATEGORY CHANGE
+  // =========================
 
-  useEffect(() => {
-    setCategory(categoryFromUrl);
-  }, [categoryFromUrl]);
-
-  /*
-   * Lọc sản phẩm
-   */
-  const filteredProducts = useMemo(() => {
-    let result = [...products];
-
-    /*
-     * Search
-     */
-    if (searchValue.trim()) {
-      const keyword = searchValue.trim().toLowerCase();
-
-      result = result.filter((product) => {
-        const productName = product?.name?.toLowerCase() || "";
-
-        const categoryName = product?.category?.name?.toLowerCase() || "";
-
-        return productName.includes(keyword) || categoryName.includes(keyword);
-      });
-    }
-
-    /*
-     * Category
-     */
-    if (category !== "all") {
-      result = result.filter((product) => {
-        const categoryName = product?.category?.name?.toLowerCase() || "";
-
-        return categoryName.includes(category);
-      });
-    }
-
-    return result;
-  }, [products, searchValue, category]);
-
-  /*
-   * Search
-   */
-  const handleSearchChange = (value) => {
-    setSearchValue(value);
-
+  const handleCategoryChange = (newCategory) => {
     const params = new URLSearchParams(searchParams);
 
-    if (value.trim()) {
-      params.set("search", value);
+    if (newCategory) {
+      params.set("category", newCategory);
     } else {
-      params.delete("search");
+      params.delete("category");
     }
 
     setSearchParams(params);
   };
 
-  /*
-   * Category
-   */
-  const handleCategoryChange = (value) => {
-    setCategory(value);
+  // =========================
+  // FILTER PRODUCTS
+  // =========================
 
-    const params = new URLSearchParams(searchParams);
+  const filteredProducts = useMemo(() => {
+    let result = [...products];
 
-    if (value === "all") {
-      params.delete("category");
-    } else {
-      params.set("category", value);
+    // =========================
+    // SEARCH
+    // =========================
+
+    if (search.trim()) {
+      const keyword = search.trim().toLowerCase();
+
+      result = result.filter((product) =>
+        product.name?.toLowerCase().includes(keyword),
+      );
+    }
+
+    // =========================
+    // CATEGORY
+    // =========================
+
+    if (category) {
+      const categoryMap = {
+        ao: "áo",
+        quan: "quần",
+        vay: "váy",
+        "ao-khoac": "áo khoác",
+      };
+
+      const categoryName = categoryMap[category] || category;
+
+      result = result.filter((product) =>
+        product.category?.name
+          ?.toLowerCase()
+          .includes(categoryName.toLowerCase()),
+      );
+    }
+
+    // =========================
+    // PRICE
+    // =========================
+
+    result = result.filter((product) => {
+      const price = Number(product.price || 0);
+
+      switch (priceRange) {
+        case "under-300":
+          return price < 300000;
+
+        case "300-500":
+          return price >= 300000 && price <= 500000;
+
+        case "500-1000":
+          return price > 500000 && price <= 1000000;
+
+        case "over-1000":
+          return price > 1000000;
+
+        default:
+          return true;
+      }
+    });
+
+    return result;
+  }, [products, search, category, priceRange]);
+
+  // =========================
+  // RESET FILTER
+  // =========================
+
+  const handleResetFilter = () => {
+    const params = new URLSearchParams();
+
+    if (search.trim()) {
+      params.set("search", search);
     }
 
     setSearchParams(params);
+
+    setPriceRange("all");
   };
 
   return (
     <>
-      <Header />
-
       <main className="products-page">
         <div className="container">
-          {/* Breadcrumb */}
-          <div className="products-breadcrumb">
-            <span>Trang chủ</span>
-            <span>/</span>
-            <span>Sản phẩm</span>
+          {/* PAGE HEADER */}
+          <div className="products-header">
+            <div>
+              <h1>Sản phẩm</h1>
+
+              <p>Khám phá các sản phẩm của Lumi</p>
+            </div>
+
+            <span className="products-count">
+              {filteredProducts.length} sản phẩm
+            </span>
           </div>
 
-          {/* Heading */}
-          <div className="products-heading">
-            <h1>Sản phẩm</h1>
+          {/* FILTER */}
+          <ProductFilter
+            category={category}
+            onCategoryChange={handleCategoryChange}
+            priceRange={priceRange}
+            onPriceChange={setPriceRange}
+            onReset={handleResetFilter}
+          />
 
-            <p>Khám phá những thiết kế mới nhất từ LUMI.</p>
-          </div>
-
-          {/* Loading */}
+          {/* LOADING */}
           {loading && (
-            <div className="products-status">Đang tải sản phẩm...</div>
+            <div className="products-state">
+              <p>Đang tải sản phẩm...</p>
+            </div>
           )}
 
-          {/* Error */}
+          {/* ERROR */}
           {!loading && error && (
-            <div className="products-status products-error">{error}</div>
+            <div className="products-state products-state-error">
+              <p>{error}</p>
+            </div>
           )}
 
-          {/* Content */}
-          {!loading && !error && (
-            <>
-              <ProductFilter
-                searchValue={searchValue}
-                onSearchChange={handleSearchChange}
-                category={category}
-                onCategoryChange={handleCategoryChange}
-                productCount={filteredProducts.length}
-              />
+          {/* EMPTY */}
+          {!loading && !error && filteredProducts.length === 0 && (
+            <div className="products-state">
+              <h3>Không tìm thấy sản phẩm</h3>
 
-              <ProductGrid products={filteredProducts} />
-            </>
+              <p>Thử thay đổi danh mục hoặc khoảng giá.</p>
+
+              <button
+                type="button"
+                className="products-reset-button"
+                onClick={handleResetFilter}
+              >
+                Xóa bộ lọc
+              </button>
+            </div>
+          )}
+
+          {/* PRODUCT GRID */}
+          {!loading && !error && filteredProducts.length > 0 && (
+            <ProductGrid products={filteredProducts} />
           )}
         </div>
       </main>
-
-      <Footer />
     </>
   );
 }

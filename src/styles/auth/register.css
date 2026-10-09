@@ -1,0 +1,167 @@
+.register-page {
+  min-height: calc(100vh - 80px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 20px;
+  background: #f8f8f7;
+}
+
+.register-card {
+  width: 100%;
+  max-width: 532px;
+  padding: 48px;
+  background: #fff;
+  border: 1px solid #e8e8e6;
+  border-radius: 12px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.04);
+}
+
+.register-header {
+  margin-bottom: 38px;
+  text-align: center;
+}
+
+.register-header h1 {
+  margin: 0 0 12px;
+  color: #111;
+  font-size: clamp(28px, 4vw, 36px);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.register-header p {
+  margin: 0;
+  color: #686868;
+  font-size: 16px;
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.register-field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.register-field label {
+  color: #171717;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.register-field input {
+  width: 100%;
+  min-height: 52px;
+  padding: 13px 15px;
+  color: #171717;
+  background: #fff;
+  border: 1px solid #d2d2d2;
+  border-radius: 7px;
+  outline: none;
+  font: inherit;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.register-field input::placeholder {
+  color: #9a9a9a;
+}
+
+.register-field input:focus {
+  border-color: #171717;
+  box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.08);
+}
+
+.register-alert {
+  margin: 0 0 24px;
+  padding: 13px 15px;
+  border: 1px solid;
+  border-radius: 7px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.register-alert-error {
+  color: #b42318;
+  background: #fff6f5;
+  border-color: #f4b7b2;
+}
+
+.register-alert-success {
+  color: #166534;
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.register-submit {
+  width: 100%;
+  min-height: 54px;
+  margin-top: 4px;
+  padding: 14px 18px;
+  color: #fff;
+  background: #111;
+  border: 1px solid #111;
+  border-radius: 7px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    transform 160ms ease,
+    opacity 160ms ease;
+}
+
+.register-submit:hover:not(:disabled) {
+  background: #333;
+  transform: translateY(-1px);
+}
+
+.register-submit:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.register-footer {
+  margin: 28px 0 0;
+  color: #686868;
+  text-align: center;
+  font-size: 15px;
+}
+
+.register-footer a {
+  margin-left: 4px;
+  color: #111;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.register-footer a:hover {
+  color: #555;
+}
+
+@media (max-width: 600px) {
+  .register-page {
+    min-height: auto;
+    padding: 28px 14px;
+  }
+
+  .register-card {
+    padding: 30px 22px;
+    border-radius: 10px;
+  }
+
+  .register-header {
+    margin-bottom: 28px;
+  }
+
+  .register-form {
+    gap: 18px;
+  }
+}

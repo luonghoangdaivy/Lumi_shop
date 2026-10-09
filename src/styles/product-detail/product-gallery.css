@@ -44,12 +44,12 @@
   width: 100%;
   aspect-ratio: 3 / 4;
   overflow: hidden;
-  background: var(--color-background-light);
+  /* background: var(--color-background-light); */
 }
 
 .product-gallery-main img {
   width: 100%;
-  height: 100%;
+  height: 80%;
   object-fit: cover;
 }
 

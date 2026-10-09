@@ -12,10 +12,8 @@ export const getProductById = async (id) => {
   return response.data;
 };
 
-export const createProduct = async (data) => {
-  const response = await api.post("/products", data);
-
-  return response.data;
+export const createProduct = (formData) => {
+  return api.post("/products", formData);
 };
 
 export const updateProduct = async (id, data) => {

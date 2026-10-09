@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import Header from "../components/layout/Header";
-import Footer from "../components/layout/Footer";
-
 import ProductGallery from "../components/product/ProductGallery";
 import ProductInfo from "../components/product/ProductInfo";
 import ProductDescription from "../components/product/ProductDescription";
@@ -157,15 +154,11 @@ function ProductDetail() {
   if (loading) {
     return (
       <>
-        <Header />
-
         <main className="product-detail-page">
           <div className="container product-detail-status">
             Đang tải sản phẩm...
           </div>
         </main>
-
-        <Footer />
       </>
     );
   }
@@ -173,23 +166,17 @@ function ProductDetail() {
   if (error || !product) {
     return (
       <>
-        <Header />
-
         <main className="product-detail-page">
           <div className="container product-detail-status product-detail-error">
             {error || "Không tìm thấy sản phẩm."}
           </div>
         </main>
-
-        <Footer />
       </>
     );
   }
 
   return (
     <>
-      <Header />
-
       <main className="product-detail-page">
         <div className="container">
           {/* Breadcrumb */}
@@ -241,8 +228,6 @@ function ProductDetail() {
           />
         </div>
       </main>
-
-      <Footer />
     </>
   );
 }

@@ -2,9 +2,6 @@ import { useEffect, useState } from "react";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-import Header from "../components/layout/Header";
-import Footer from "../components/layout/Footer";
-
 import { getCart, updateCartItem, removeCartItem } from "../api/cart.api";
 
 import { useCart } from "../context/CartContext";
@@ -146,13 +143,9 @@ function Cart() {
   if (loading) {
     return (
       <>
-        <Header />
-
         <main className="cart-page">
           <div className="container cart-status">Đang tải giỏ hàng...</div>
         </main>
-
-        <Footer />
       </>
     );
   }
@@ -163,13 +156,9 @@ function Cart() {
   if (error) {
     return (
       <>
-        <Header />
-
         <main className="cart-page">
           <div className="container cart-status cart-error">{error}</div>
         </main>
-
-        <Footer />
       </>
     );
   }
@@ -179,8 +168,6 @@ function Cart() {
   // =========================
   return (
     <>
-      <Header />
-
       <main className="cart-page">
         <div className="container">
           {/* Breadcrumb */}
@@ -385,8 +372,6 @@ function Cart() {
           )}
         </div>
       </main>
-
-      <Footer />
     </>
   );
 }

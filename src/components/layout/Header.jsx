@@ -1,220 +1,406 @@
 import { useState } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Search, ShoppingBag, User, Heart, Menu, X } from "lucide-react";
+
+import {
+  Search,
+  ShoppingBag,
+  User,
+  Heart,
+  Menu,
+  X,
+  LogOut,
+  ClipboardList,
+} from "lucide-react";
+
+import { Link, useNavigate } from "react-router-dom";
+
 import { useCart } from "../../context/CartContext";
+import { useAuth } from "../../context/AuthContext";
 
 import "../../styles/layout/header.css";
+
+const categories = [
+  {
+    name: "Áo",
+    slug: "ao",
+  },
+  {
+    name: "Quần",
+    slug: "quan",
+  },
+  {
+    name: "Váy",
+    slug: "vay",
+  },
+  {
+    name: "Áo khoác",
+    slug: "ao-khoac",
+  },
+];
 
 function Header() {
   const navigate = useNavigate();
 
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
   const { cartCount } = useCart();
 
-  const handleSearch = (e) => {
-    e.preventDefault();
+  const { user, loading: authLoading, isAuthenticated, logout } = useAuth();
 
-    const keyword = searchValue.trim();
+  const [search, setSearch] = useState("");
 
-    if (!keyword) return;
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+
+  // =========================
+  // SEARCH
+  // =========================
+
+  const handleSearch = (event) => {
+    event.preventDefault();
+
+    const keyword = search.trim();
+
+    if (!keyword) {
+      navigate("/products");
+      return;
+    }
 
     navigate(`/products?search=${encodeURIComponent(keyword)}`);
 
-    setSearchOpen(false);
-    setSearchValue("");
+    setSearch("");
+    setMobileMenuOpen(false);
   };
 
-  const handleMobileLink = () => {
+  // =========================
+  // LOGOUT
+  // =========================
+
+  const handleLogout = () => {
+    logout();
+
+    setUserMenuOpen(false);
+    setMobileMenuOpen(false);
+
+    navigate("/");
+  };
+
+  // =========================
+  // CATEGORY
+  // =========================
+
+  const handleCategoryClick = (slug) => {
+    navigate(`/products?category=${slug}`);
+
     setMobileMenuOpen(false);
   };
 
   return (
-    <>
-      <header className="site-header">
-        <div className="container header-container">
-          {/* MOBILE MENU */}
-          <button
-            type="button"
-            className="header-mobile-menu"
-            onClick={() => setMobileMenuOpen(true)}
-            aria-label="Mở menu"
-          >
-            <Menu size={22} />
-          </button>
+    <header className="site-header">
+      <div className="header-container">
+        {/* =========================
+            MOBILE MENU BUTTON
+        ========================= */}
 
-          {/* LOGO */}
-          <Link to="/" className="header-logo">
-            LUMI
-          </Link>
+        <button
+          type="button"
+          className="header-menu-button"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label={mobileMenuOpen ? "Đóng menu" : "Mở menu"}
+        >
+          {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
 
-          {/* NAVIGATION */}
-          <nav className="header-nav">
-            <NavLink
-              to="/"
-              className={({ isActive }) =>
-                isActive ? "header-nav-link active" : "header-nav-link"
-              }
-            >
-              Trang chủ
-            </NavLink>
+        {/* =========================
+            LOGO
+        ========================= */}
 
-            <NavLink
-              to="/products"
-              className={({ isActive }) =>
-                isActive ? "header-nav-link active" : "header-nav-link"
-              }
-            >
-              Sản phẩm
-            </NavLink>
+        <Link
+          to="/"
+          className="header-logo"
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          LUMI
+        </Link>
 
-            <NavLink to="/products?category=ao" className="header-nav-link">
-              Áo
-            </NavLink>
+        {/* =========================
+            DESKTOP NAVIGATION
+        ========================= */}
 
-            <NavLink to="/products?category=quan" className="header-nav-link">
-              Quần
-            </NavLink>
+        <nav className="header-nav">
+          <Link to="/">Trang chủ</Link>
 
-            <NavLink to="/products?category=vay" className="header-nav-link">
-              Váy
-            </NavLink>
+          <Link to="/products">Sản phẩm</Link>
 
-            <NavLink
-              to="/products?category=ao-khoac"
-              className="header-nav-link"
-            >
-              Áo khoác
-            </NavLink>
-          </nav>
+          <div className="header-category-wrapper">
+            <span className="header-category-label">Danh mục</span>
 
-          {/* ACTIONS */}
-          <div className="header-actions">
-            <button
-              type="button"
-              className="header-action"
-              onClick={() => setSearchOpen(true)}
-              aria-label="Tìm kiếm"
-            >
-              <Search size={20} strokeWidth={1.7} />
-            </button>
-
-            <button
-              type="button"
-              className="header-action header-user"
-              onClick={() => navigate("/login")}
-              aria-label="Tài khoản"
-            >
-              <User size={20} strokeWidth={1.7} />
-            </button>
-
-            <button
-              type="button"
-              className="header-action"
-              onClick={() => navigate("/favorites")}
-              aria-label="Yêu thích"
-            >
-              <Heart size={20} strokeWidth={1.7} />
-            </button>
-
-            <button
-              type="button"
-              className="header-action header-cart"
-              onClick={() => navigate("/cart")}
-              aria-label="Giỏ hàng"
-            >
-              <ShoppingBag size={20} strokeWidth={1.7} />
-
-              <span className="header-cart-count">{cartCount}</span>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* SEARCH OVERLAY */}
-      {searchOpen && (
-        <div className="header-search-overlay">
-          <div className="header-search-box">
-            <div className="container">
-              <form className="header-search-form" onSubmit={handleSearch}>
-                <Search size={22} />
-
-                <input
-                  type="text"
-                  value={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
-                  placeholder="Tìm kiếm sản phẩm..."
-                  autoFocus
-                />
-
-                <button
-                  type="button"
-                  onClick={() => setSearchOpen(false)}
-                  aria-label="Đóng tìm kiếm"
+            <div className="header-category-dropdown">
+              {categories.map((category) => (
+                <Link
+                  key={category.slug}
+                  to={`/products?category=${category.slug}`}
                 >
-                  <X size={22} />
-                </button>
-              </form>
+                  {category.name}
+                </Link>
+              ))}
             </div>
           </div>
-        </div>
-      )}
+        </nav>
 
-      {/* MOBILE MENU */}
-      {mobileMenuOpen && (
-        <div className="mobile-menu-overlay">
-          <div className="mobile-menu">
-            <div className="mobile-menu-header">
-              <Link to="/" className="header-logo" onClick={handleMobileLink}>
-                LUMI
-              </Link>
+        {/* =========================
+            HEADER ACTIONS
+        ========================= */}
+
+        <div className="header-actions">
+          {/* SEARCH */}
+
+          <form className="header-search" onSubmit={handleSearch}>
+            <Search size={18} />
+
+            <input
+              type="text"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Tìm kiếm..."
+              aria-label="Tìm kiếm sản phẩm"
+            />
+          </form>
+
+          {/* FAVORITE */}
+
+          <button
+            type="button"
+            className="header-icon-button"
+            onClick={() => navigate("/favorites")}
+            aria-label="Sản phẩm yêu thích"
+          >
+            <Heart size={20} strokeWidth={1.7} />
+          </button>
+
+          {/* =========================
+              USER / AVATAR
+          ========================= */}
+
+          {authLoading ? (
+            <div className="header-avatar-button">
+              <User size={20} strokeWidth={1.7} />
+            </div>
+          ) : isAuthenticated ? (
+            <div className="header-user-wrapper">
+              {/* AVATAR */}
 
               <button
                 type="button"
-                onClick={() => setMobileMenuOpen(false)}
-                aria-label="Đóng menu"
+                className="header-avatar-button"
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                aria-label="Tài khoản"
               >
-                <X size={24} />
+                <User size={20} strokeWidth={1.7} />
               </button>
+
+              {/* USER DROPDOWN */}
+
+              {userMenuOpen && (
+                <div className="header-user-dropdown">
+                  {/* USER INFO */}
+
+                  <div className="header-user-dropdown-info">
+                    <div className="header-user-avatar-large">
+                      <User size={22} strokeWidth={1.7} />
+                    </div>
+
+                    <div>
+                      <strong>
+                        {user?.name ||
+                          user?.full_name ||
+                          user?.username ||
+                          "Tài khoản"}
+                      </strong>
+
+                      {user?.email && <span>{user.email}</span>}
+                    </div>
+                  </div>
+
+                  <div className="header-user-dropdown-divider" />
+
+                  {/* USER INFORMATION */}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigate("/user");
+                      setUserMenuOpen(false);
+                    }}
+                  >
+                    <User size={17} />
+
+                    <span>Thông tin</span>
+                  </button>
+
+                  {/* ORDERS */}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigate("/orders");
+                      setUserMenuOpen(false);
+                    }}
+                  >
+                    <ClipboardList size={17} />
+
+                    <span>Đơn hàng</span>
+                  </button>
+
+                  {/* LOGOUT */}
+
+                  <button
+                    type="button"
+                    className="header-logout-button"
+                    onClick={handleLogout}
+                  >
+                    <LogOut size={17} />
+
+                    <span>Đăng xuất</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* CHƯA ĐĂNG NHẬP */
+
+            <button
+              type="button"
+              className="header-avatar-button"
+              onClick={() => navigate("/login")}
+              aria-label="Đăng nhập"
+            >
+              <User size={20} strokeWidth={1.7} />
+            </button>
+          )}
+
+          {/* =========================
+              CART
+          ========================= */}
+
+          <button
+            type="button"
+            className="header-cart-button"
+            onClick={() => navigate("/cart")}
+            aria-label="Giỏ hàng"
+          >
+            <ShoppingBag size={21} strokeWidth={1.7} />
+
+            {cartCount > 0 && (
+              <span className="header-cart-count">{cartCount}</span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* =========================
+          MOBILE MENU
+      ========================= */}
+
+      {mobileMenuOpen && (
+        <div className="header-mobile-menu">
+          <nav className="header-mobile-nav">
+            <Link to="/" onClick={() => setMobileMenuOpen(false)}>
+              Trang chủ
+            </Link>
+
+            <Link to="/products" onClick={() => setMobileMenuOpen(false)}>
+              Tất cả sản phẩm
+            </Link>
+
+            {/* MOBILE CATEGORY */}
+
+            <div className="header-mobile-category">
+              <span>Danh mục</span>
+
+              {categories.map((category) => (
+                <button
+                  type="button"
+                  key={category.slug}
+                  onClick={() => handleCategoryClick(category.slug)}
+                >
+                  {category.name}
+                </button>
+              ))}
             </div>
 
-            <nav className="mobile-nav">
-              <NavLink to="/" onClick={handleMobileLink}>
-                Trang chủ
-              </NavLink>
+            {/* FAVORITE */}
 
-              <NavLink to="/products" onClick={handleMobileLink}>
-                Sản phẩm
-              </NavLink>
+            <button
+              type="button"
+              onClick={() => {
+                navigate("/favorites");
+                setMobileMenuOpen(false);
+              }}
+            >
+              <Heart size={17} />
+              Yêu thích
+            </button>
 
-              <NavLink to="/products?category=ao" onClick={handleMobileLink}>
-                Áo
-              </NavLink>
+            {/* ORDERS */}
 
-              <NavLink to="/products?category=quan" onClick={handleMobileLink}>
-                Quần
-              </NavLink>
-
-              <NavLink to="/products?category=vay" onClick={handleMobileLink}>
-                Váy
-              </NavLink>
-
-              <NavLink
-                to="/products?category=ao-khoac"
-                onClick={handleMobileLink}
+            {isAuthenticated && (
+              <button
+                type="button"
+                onClick={() => {
+                  navigate("/orders");
+                  setMobileMenuOpen(false);
+                }}
               >
-                Áo khoác
-              </NavLink>
-
-              <NavLink to="/orders" onClick={handleMobileLink}>
+                <ClipboardList size={17} />
                 Đơn hàng
-              </NavLink>
-            </nav>
-          </div>
+              </button>
+            )}
+
+            {/* USER */}
+
+            {isAuthenticated && (
+              <button
+                type="button"
+                onClick={() => {
+                  navigate("/user");
+                  setMobileMenuOpen(false);
+                }}
+              >
+                <User size={17} />
+                Thông tin
+              </button>
+            )}
+
+            {/* LOGIN */}
+
+            {!isAuthenticated && !authLoading && (
+              <button
+                type="button"
+                onClick={() => {
+                  navigate("/login");
+                  setMobileMenuOpen(false);
+                }}
+              >
+                <User size={17} />
+                Đăng nhập
+              </button>
+            )}
+
+            {/* LOGOUT */}
+
+            {isAuthenticated && (
+              <button
+                type="button"
+                className="header-mobile-logout"
+                onClick={handleLogout}
+              >
+                <LogOut size={17} />
+                Đăng xuất
+              </button>
+            )}
+          </nav>
         </div>
       )}
-    </>
+    </header>
   );
 }
 

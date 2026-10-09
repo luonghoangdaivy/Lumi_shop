@@ -1,15 +1,17 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
-import Header from "../components/layout/Header";
-import Footer from "../components/layout/Footer";
+import { login as loginApi } from "../api/auth.api";
+import { useAuth } from "../context/AuthContext";
 
-import { login } from "../api/auth.api";
+import "../styles/auth/login.css";
 
 function Login() {
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({
+  const { login } = useAuth();
+
+  const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
@@ -17,95 +19,131 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const handleChange = (event) => {
+    const { name, value } = event.target;
 
-    setForm((prev) => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
+
+    setError("");
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    setError("");
+
+    // Validate email
+    if (!formData.email.trim()) {
+      setError("Vui lòng nhập email");
+      return;
+    }
+
+    // Validate password
+    if (!formData.password) {
+      setError("Vui lòng nhập mật khẩu");
+      return;
+    }
 
     try {
       setLoading(true);
-      setError("");
 
-      const response = await login(form);
+      const response = await loginApi({
+        email: formData.email.trim(),
+        password: formData.password,
+      });
 
-      console.log("Login response:", response);
+      console.log("LOGIN API RESPONSE:", response);
 
-      // Lưu JWT
-      localStorage.setItem("accessToken", response.data.accessToken);
+      await login(response);
 
-      // Lưu thông tin user nếu cần
-      localStorage.setItem("user", JSON.stringify(response.data.user));
-
-      // Về trang chủ
+      // Login thành công
       navigate("/");
     } catch (error) {
       console.error("Login error:", error);
 
-      setError(
-        error.response?.data?.message || "Email hoặc mật khẩu không chính xác",
-      );
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Email hoặc mật khẩu không chính xác";
+
+      setError(message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <>
-      <Header />
-
-      <main className="auth-page">
-        <div className="container">
-          <div className="auth-form">
+    <main className="login-page">
+      <div className="login-container">
+        <div className="login-card">
+          {/* Header */}
+          <div className="login-header">
             <h1>Đăng nhập</h1>
 
-            <p>Đăng nhập để tiếp tục mua sắm tại Lumi.</p>
+            <p>Đăng nhập vào tài khoản Lumi của bạn</p>
+          </div>
 
-            {error && <div className="auth-error">{error}</div>}
+          {/* Error */}
+          {error && <div className="login-error">{error}</div>}
 
-            <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label>Email</label>
+          {/* Form */}
+          <form className="login-form" onSubmit={handleSubmit}>
+            {/* Email */}
+            <div className="login-form-group">
+              <label htmlFor="email">Email</label>
 
-                <input
-                  type="email"
-                  name="email"
-                  value={form.email}
-                  onChange={handleChange}
-                  placeholder="Nhập email"
-                  required
-                />
-              </div>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Nhập email của bạn"
+                autoComplete="email"
+                disabled={loading}
+              />
+            </div>
 
-              <div className="form-group">
-                <label>Mật khẩu</label>
+            {/* Password */}
+            <div className="login-form-group">
+              <label htmlFor="password">Mật khẩu</label>
 
-                <input
-                  type="password"
-                  name="password"
-                  value={form.password}
-                  onChange={handleChange}
-                  placeholder="Nhập mật khẩu"
-                  required
-                />
-              </div>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Nhập mật khẩu"
+                autoComplete="current-password"
+                disabled={loading}
+              />
+            </div>
 
-              <button type="submit" disabled={loading}>
-                {loading ? "Đang đăng nhập..." : "Đăng nhập"}
-              </button>
-            </form>
+            {/* Submit */}
+            <button
+              type="submit"
+              className="login-submit-button"
+              disabled={loading}
+            >
+              {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+            </button>
+          </form>
+
+          {/* Links */}
+          <div className="login-links">
+            <div className="login-register">
+              <span>Chưa có tài khoản?</span>
+
+              <Link to="/register">Đăng ký</Link>
+            </div>
           </div>
         </div>
-      </main>
-
-      <Footer />
-    </>
+      </div>
+    </main>
   );
 }
 

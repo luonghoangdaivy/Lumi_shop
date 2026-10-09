@@ -27,3 +27,12 @@ export const cancelOrder = async (id) => {
 
   return response.data;
 };
+
+// Cập nhật trạng thái đơn hàng (Admin)
+export const updateOrderStatus = async (id, status) => {
+  const response = await api.put(`/orders/${id}/status`, {
+    status,
+  });
+
+  return response.data;
+};

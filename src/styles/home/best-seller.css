@@ -1,23 +1,25 @@
 .best-seller-section {
-  padding: 90px 0;
-
-  background: var(--color-background-light);
+  padding: 30px 0 100px;
 }
 
 .best-seller-heading {
-  margin-bottom: 36px;
+  margin-bottom: 40px;
 
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
 
-  gap: 30px;
+  gap: 40px;
+}
+
+.best-seller-heading > div:first-child {
+  max-width: 600px;
 }
 
 .best-seller-eyebrow {
   display: block;
 
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 
   font-size: 11px;
   font-weight: 600;
@@ -28,54 +30,115 @@
 }
 
 .best-seller-heading h2 {
-  margin: 0;
+  margin: 0 0 14px;
 
   font-size: 36px;
+  line-height: 1.2;
 }
 
 .best-seller-heading p {
-  max-width: 380px;
+  max-width: 500px;
 
   margin: 0;
 
   color: var(--color-text-light);
 
-  line-height: 1.6;
+  font-size: 14px;
+
+  line-height: 1.7;
 }
+
+.best-seller-link {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 8px;
+
+  padding-bottom: 6px;
+
+  border-bottom: 1px solid var(--color-text);
+
+  font-size: 14px;
+  font-weight: var(--font-weight-medium);
+
+  white-space: nowrap;
+
+  transition: opacity var(--transition);
+}
+
+.best-seller-link:hover {
+  opacity: 0.6;
+}
+
+.best-seller-link span {
+  transition: transform var(--transition);
+}
+
+.best-seller-link:hover span {
+  transform: translateX(4px);
+}
+
+/* =========================
+   Grid
+========================= */
 
 .best-seller-grid {
   display: grid;
 
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 
   gap: 20px;
 }
 
-.best-seller-loading,
-.best-seller-empty {
-  min-height: 200px;
+/* =========================
+   Status
+========================= */
+
+.best-seller-status {
+  min-height: 220px;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
+  border: 1px solid var(--color-border);
+
   color: var(--color-text-light);
+
+  font-size: 14px;
+
+  text-align: center;
 }
 
-@media (max-width: 900px) {
+.best-seller-error {
+  color: var(--color-danger);
+}
+
+/* =========================
+   Tablet
+========================= */
+
+@media (max-width: 1000px) {
   .best-seller-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 600px) {
+/* =========================
+   Mobile
+========================= */
+
+@media (max-width: 768px) {
   .best-seller-section {
-    padding: 60px 0;
+    padding: 20px 0 70px;
   }
 
   .best-seller-heading {
-    flex-direction: column;
     align-items: flex-start;
+
+    flex-direction: column;
+
+    gap: 20px;
   }
 
   .best-seller-heading h2 {
@@ -83,8 +146,18 @@
   }
 
   .best-seller-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 
-    gap: 12px;
+    gap: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .best-seller-heading h2 {
+    font-size: 28px;
+  }
+
+  .best-seller-grid {
+    gap: 10px;
   }
 }

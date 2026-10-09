@@ -2,9 +2,6 @@ import { useEffect, useState } from "react";
 import { ChevronDown, ChevronUp, Package, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-import Header from "../components/layout/Header";
-import Footer from "../components/layout/Footer";
-
 import { getOrders, cancelOrder } from "../api/order.api";
 
 import "../styles/orders/orders.css";
@@ -140,13 +137,9 @@ function Orders() {
   if (loading) {
     return (
       <>
-        <Header />
-
         <main className="orders-page">
           <div className="container orders-status">Đang tải đơn hàng...</div>
         </main>
-
-        <Footer />
       </>
     );
   }
@@ -158,13 +151,9 @@ function Orders() {
   if (error) {
     return (
       <>
-        <Header />
-
         <main className="orders-page">
           <div className="container orders-status orders-error">{error}</div>
         </main>
-
-        <Footer />
       </>
     );
   }
@@ -176,8 +165,6 @@ function Orders() {
   if (orders.length === 0) {
     return (
       <>
-        <Header />
-
         <main className="orders-page">
           <div className="container">
             <div className="orders-breadcrumb">
@@ -207,8 +194,6 @@ function Orders() {
             </div>
           </div>
         </main>
-
-        <Footer />
       </>
     );
   }
@@ -219,8 +204,6 @@ function Orders() {
 
   return (
     <>
-      <Header />
-
       <main className="orders-page">
         <div className="container">
           {/* BREADCRUMB */}
@@ -420,8 +403,6 @@ function Orders() {
           </div>
         </div>
       </main>
-
-      <Footer />
     </>
   );
 }

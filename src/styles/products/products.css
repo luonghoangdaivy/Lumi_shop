@@ -1,78 +1,84 @@
 .products-page {
-  min-height: 70vh;
-  padding: 30px 0 70px;
+  min-height: calc(100vh - var(--header-height));
+  padding: 48px 0 64px;
 }
 
-/* Breadcrumb */
-
-.products-breadcrumb {
+.products-header {
   display: flex;
-  align-items: center;
-  gap: 8px;
-
-  margin-bottom: 36px;
-
-  color: var(--color-text-light);
-  font-size: var(--font-size-xs);
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 32px;
 }
 
-.products-breadcrumb span:last-child {
-  color: var(--color-text);
-}
-
-/* Heading */
-
-.products-heading {
-  margin-bottom: 40px;
-}
-
-.products-heading h1 {
-  margin: 0;
-
-  font-size: 36px;
+.products-header h1 {
+  margin: 0 0 8px;
+  font-size: 32px;
   font-weight: var(--font-weight-semibold);
-  line-height: 1.2;
 }
 
-.products-heading p {
-  margin-top: 10px;
-
+.products-header p {
+  margin: 0;
   color: var(--color-text-light);
   font-size: var(--font-size-sm);
 }
 
-/* Status */
+.products-count {
+  color: var(--color-text-light);
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+}
 
-.products-status {
+.products-state {
   min-height: 300px;
-
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-
-  color: var(--color-text-light);
-
-  font-size: var(--font-size-sm);
+  gap: 8px;
+  text-align: center;
 }
 
-.products-error {
+.products-state h3 {
+  margin: 0;
+  font-size: var(--font-size-lg);
+}
+
+.products-state p {
+  margin: 0;
+  color: var(--color-text-light);
+}
+
+.products-state-error {
   color: var(--color-danger);
 }
 
-@media (max-width: 600px) {
+.products-reset-button {
+  margin-top: 16px;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: var(--color-white);
+  font-size: var(--font-size-sm);
+}
+
+.products-reset-button:hover {
+  background: #333;
+}
+
+@media (max-width: 768px) {
   .products-page {
-    padding: 20px 0 50px;
+    padding: 32px 0 48px;
   }
 
-  .products-breadcrumb {
+  .products-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
     margin-bottom: 24px;
   }
 
-  .products-heading {
-    margin-bottom: 28px;
-  }
-
-  .products-heading h1 {
+  .products-header h1 {
     font-size: 28px;
   }
 }

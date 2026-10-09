@@ -1,42 +1,28 @@
-import { ArrowRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import "../../styles/home/sale-banner.css";
 
 function SaleBanner() {
-  const navigate = useNavigate();
-
   return (
-    <section className="home-section sale-banner">
-      <div className="sale-banner-container">
-        <div className="sale-banner-content">
-          <span className="sale-banner-eyebrow">SPECIAL OFFER</span>
+    <section className="sale-banner">
+      <div className="sale-banner-content">
+        <span className="sale-banner-eyebrow">LUMI SPECIAL OFFER</span>
 
-          <h2>
-            Ưu đãi đặc biệt
-            <br />
-            dành cho bạn
-          </h2>
+        <h2 className="sale-banner-title">
+          Làm mới phong cách
+          <br />
+          của bạn cùng LUMI
+        </h2>
 
-          <p>Khám phá những sản phẩm đang được ưu đãi tại LUMI.</p>
+        <p className="sale-banner-description">
+          Khám phá những thiết kế mới nhất và tìm kiếm những món đồ phù hợp với
+          phong cách riêng của bạn.
+        </p>
 
-          <button
-            type="button"
-            className="sale-banner-button"
-            onClick={() => navigate("/products")}
-          >
-            Mua sắm ngay
-            <ArrowRight size={18} />
-          </button>
-        </div>
-
-        <div className="sale-banner-number">
-          <span>UP TO</span>
-
-          <strong>30%</strong>
-
-          <span>OFF</span>
-        </div>
+        <Link to="/products" className="sale-banner-button">
+          Mua sắm ngay
+          <span>→</span>
+        </Link>
       </div>
     </section>
   );
