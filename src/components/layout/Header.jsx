@@ -9,6 +9,7 @@ import {
   X,
   LogOut,
   ClipboardList,
+  LayoutDashboard,
 } from "lucide-react";
 
 import { Link, useNavigate } from "react-router-dom";
@@ -221,6 +222,20 @@ function Header() {
                   </div>
 
                   <div className="header-user-dropdown-divider" />
+
+                  {/* ADMIN */}
+                  {user?.role === "ADMIN" && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigate("/admin");
+                        setUserMenuOpen(false);
+                      }}
+                    >
+                      <LayoutDashboard size={17} />
+                      <span>Quản trị</span>
+                    </button>
+                  )}
 
                   {/* USER INFORMATION */}
 

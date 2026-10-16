@@ -110,35 +110,6 @@ const User = () => {
   const [ordersLoading, setOrdersLoading] = useState(false);
 
   // ========================================
-  // INIT
-  // ========================================
-
-  useEffect(() => {
-    if (!user) return;
-
-    setProfileForm({
-      name: user.name || user.username || "",
-      phone: user.phone || "",
-      address: user.address || "",
-    });
-
-    // Avatar vẫn dùng localStorage
-    const savedAvatar = localStorage.getItem(`userAvatar_${user.id}`);
-
-    if (savedAvatar) {
-      setAvatar(savedAvatar);
-    } else {
-      setAvatar("");
-    }
-
-    // Địa chỉ lấy từ DATABASE
-    loadAddresses();
-
-    // Load tỉnh/thành
-    loadProvinces();
-  }, [user]);
-
-  // ========================================
   // LOAD ADDRESSES FROM DATABASE
   // ========================================
 
@@ -217,6 +188,35 @@ const User = () => {
       setLocationLoading(false);
     }
   };
+
+  // ========================================
+  // INIT
+  // ========================================
+
+  useEffect(() => {
+    if (!user) return;
+
+    setProfileForm({
+      name: user.name || user.username || "",
+      phone: user.phone || "",
+      address: user.address || "",
+    });
+
+    // Avatar vẫn dùng localStorage
+    const savedAvatar = localStorage.getItem(`userAvatar_${user.id}`);
+
+    if (savedAvatar) {
+      setAvatar(savedAvatar);
+    } else {
+      setAvatar("");
+    }
+
+    // Địa chỉ lấy từ DATABASE
+    loadAddresses();
+
+    // Load tỉnh/thành
+    loadProvinces();
+  }, [user]);
 
   // ========================================
   // LOAD WARDS

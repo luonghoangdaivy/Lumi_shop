@@ -123,6 +123,11 @@ function Login() {
               />
             </div>
 
+            {/* Forgot Password */}
+            <div className="login-forgot-password">
+              <Link to="/forgot-password">Quên mật khẩu?</Link>
+            </div>
+
             {/* Submit */}
             <button
               type="submit"

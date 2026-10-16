@@ -30,9 +30,24 @@ export const cancelOrder = async (id) => {
 
 // Cập nhật trạng thái đơn hàng (Admin)
 export const updateOrderStatus = async (id, status) => {
-  const response = await api.put(`/orders/${id}/status`, {
+  const response = await api.put(`/admin/orders/${id}/status`, {
     status,
   });
 
   return response.data;
 };
+
+// Lấy danh sách tất cả đơn hàng (Admin)
+export const getAdminOrders = async () => {
+  const response = await api.get("/admin/orders");
+
+  return response.data;
+};
+
+// Lấy chi tiết đơn hàng (Admin)
+export const getAdminOrderById = async (id) => {
+  const response = await api.get(`/admin/orders/${id}`);
+
+  return response.data;
+};
+

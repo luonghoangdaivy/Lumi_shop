@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ChevronDown, ChevronUp, Package, X } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { getOrders, cancelOrder } from "../api/order.api";
 
@@ -10,11 +10,14 @@ const API_URL = "http://localhost:4000";
 
 function Orders() {
   const navigate = useNavigate();
+  const { id: paramOrderId } = useParams();
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [expandedOrder, setExpandedOrder] = useState(null);
+  const [expandedOrder, setExpandedOrder] = useState(
+    paramOrderId ? Number(paramOrderId) : null,
+  );
   const [cancellingId, setCancellingId] = useState(null);
 
   // =========================
@@ -31,6 +34,10 @@ function Orders() {
       const orderData = response?.data || [];
 
       setOrders(orderData);
+
+      if (paramOrderId) {
+        setExpandedOrder(Number(paramOrderId));
+      }
     } catch (error) {
       console.error("Get orders error:", error);
 
@@ -44,7 +51,7 @@ function Orders() {
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [paramOrderId]);
 
   // =========================
   // FORMAT DATE
@@ -245,8 +252,7 @@ function Orders() {
                     <div className="order-card-main-info">
                       <div className="order-id">
                         <span>Mã đơn hàng</span>
-
-                        <strong>#{order.id}</strong>
+                        <strong>{order.order_code || "Chưa có mã"}</strong>
                       </div>
 
                       <div className="order-date">

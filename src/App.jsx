@@ -12,6 +12,7 @@ import OrderSuccess from "./pages/OrderSuccess";
 import Orders from "./pages/Orders";
 import UserPage from "./pages/User";
 import Favorites from "./pages/Favorites";
+import ResetPassword from "./pages/ResetPassword";
 
 import MainLayout from "./components/layout/MainLayout";
 
@@ -24,6 +25,8 @@ import AdminProductEdit from "./pages/admin/AdminProductEdit";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminCategoryForm from "./pages/admin/AdminCategoryForm";
 import AdminOrders from "./pages/admin/AdminOrders";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminReviews from "./pages/admin/AdminReviews";
 
 function App() {
   return (
@@ -39,6 +42,8 @@ function App() {
         <Route path="/register" element={<Register />} />
 
         <Route path="/forgot-password" element={<ForgotPassword />} />
+
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* =========================
             WEBSITE
@@ -92,15 +97,9 @@ function App() {
 
             <Route path="/admin/orders" element={<AdminOrders />} />
 
-            <Route
-              path="customers"
-              element={<div>Quản lý khách hàng — đang xây dựng</div>}
-            />
+            <Route path="customers" element={<AdminUsers />} />
 
-            <Route
-              path="reviews"
-              element={<div>Quản lý đánh giá — đang xây dựng</div>}
-            />
+            <Route path="reviews" element={<AdminReviews />} />
           </Route>
         </Route>
       </Routes>
