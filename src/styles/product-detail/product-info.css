@@ -132,6 +132,97 @@
   color: var(--color-danger);
 }
 
+/* Quantity */
+.product-quantity {
+  margin-bottom: 24px;
+}
+
+.product-quantity-controls {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-border-dark);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  height: 42px;
+}
+
+.product-quantity-btn {
+  width: 40px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--color-text);
+  transition: background var(--transition);
+}
+
+.product-quantity-btn:hover:not(:disabled) {
+  background: var(--color-background-light);
+}
+
+.product-quantity-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.product-quantity-input {
+  width: 50px;
+  height: 100%;
+  text-align: center;
+  border: none;
+  border-left: 1px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+}
+
+.product-quantity-input::-webkit-outer-spin-button,
+.product-quantity-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Actions Row */
+.product-actions-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.product-actions-row button.button {
+  flex: 1;
+}
+
+.product-detail-favorite-btn {
+  height: 48px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--color-border-dark);
+  border-radius: var(--radius-sm);
+  background: var(--color-white);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.product-detail-favorite-btn:hover {
+  border-color: var(--color-black);
+}
+
+.product-detail-favorite-btn.active {
+  border-color: #e53935;
+  color: #e53935;
+  background: #fff5f5;
+}
+
 @media (max-width: 900px) {
   .product-info {
     padding-left: 0;

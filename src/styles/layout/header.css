@@ -415,7 +415,8 @@
    CART COUNT
 ===================================================== */
 
-.header-cart-count {
+.header-cart-count,
+.header-favorite-count {
   position: absolute;
 
   top: 1px;

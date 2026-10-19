@@ -27,10 +27,12 @@ import AdminCategoryForm from "./pages/admin/AdminCategoryForm";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminReviews from "./pages/admin/AdminReviews";
+import ScrollToTop from "./components/ScrollToTop";
 
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         {/* =========================
             AUTH

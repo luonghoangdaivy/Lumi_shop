@@ -16,6 +16,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
+import { useFavorites } from "../../context/FavoriteContext";
 
 import "../../styles/layout/header.css";
 
@@ -42,6 +43,7 @@ function Header() {
   const navigate = useNavigate();
 
   const { cartCount } = useCart();
+  const { favoriteCount } = useFavorites();
 
   const { user, loading: authLoading, isAuthenticated, logout } = useAuth();
 
@@ -175,6 +177,9 @@ function Header() {
             aria-label="Sản phẩm yêu thích"
           >
             <Heart size={20} strokeWidth={1.7} />
+            {favoriteCount > 0 && (
+              <span className="header-favorite-count">{favoriteCount}</span>
+            )}
           </button>
 
           {/* =========================

@@ -44,7 +44,9 @@ function Hero() {
         </div>
 
         <div className="hero-image-wrapper">
-          <div className="hero-image"></div>
+          <div className="hero-image">
+            <img src="" alt="" />
+          </div>
 
           <div className="hero-floating-card">
             <span className="hero-floating-label">LUMI</span>

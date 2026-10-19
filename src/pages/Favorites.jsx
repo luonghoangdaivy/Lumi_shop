@@ -1,12 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
-
 import { Heart, ShoppingBag } from "lucide-react";
-
 import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
-
-import { getFavorites, removeFavorite } from "../api/favorite.api.js";
+import { useFavorites } from "../context/FavoriteContext";
 
 import "../styles/favorites/favorites.css";
 
@@ -14,105 +10,15 @@ const API_URL = "http://localhost:4000";
 
 function Favorites() {
   const navigate = useNavigate();
-
   const { user, loading: authLoading } = useAuth();
-
-  const [favorites, setFavorites] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  // =====================================================
-  // LOAD FAVORITES
-  // =====================================================
-
-  const loadFavorites = useCallback(async () => {
-    // Chưa đăng nhập
-    if (!user) {
-      setFavorites([]);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      const response = await getFavorites();
-
-      console.log("FAVORITES RESPONSE:", response);
-
-      /*
-        API có thể trả:
-
-        {
-          success: true,
-          data: [...]
-        }
-
-        hoặc:
-
-        [...]
-      */
-
-      const data = response?.data ?? response ?? [];
-
-      setFavorites(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error("GET FAVORITES ERROR:", error);
-
-      console.error("STATUS:", error?.response?.status);
-
-      console.error("DATA:", error?.response?.data);
-
-      if (error?.response?.status === 401) {
-        localStorage.removeItem("accessToken");
-
-        localStorage.removeItem("user");
-
-        navigate("/login");
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [user, navigate]);
-
-  // =====================================================
-  // LOAD KHI USER ĐÃ XÁC THỰC
-  // =====================================================
-
-  useEffect(() => {
-    if (authLoading) {
-      return;
-    }
-
-    loadFavorites();
-  }, [authLoading, loadFavorites]);
-
-  // =====================================================
-  // REMOVE FAVORITE
-  // =====================================================
+  const { favorites, loading, toggleFavorite } = useFavorites();
 
   const handleRemoveFavorite = async (productId) => {
     try {
-      await removeFavorite(productId);
-
-      /*
-        Xóa ngay khỏi giao diện
-        không cần gọi GET /favorites lại
-      */
-
-      setFavorites((prev) =>
-        prev.filter((item) => {
-          const id = item.product_id ?? item.product?.id ?? item.id;
-
-          return String(id) !== String(productId);
-        }),
-      );
+      await toggleFavorite(productId);
     } catch (error) {
       console.error("REMOVE FAVORITE ERROR:", error);
-
-      alert(
-        error?.response?.data?.message ||
-          "Không thể xóa sản phẩm khỏi yêu thích",
-      );
+      alert("Không thể xóa sản phẩm khỏi yêu thích");
     }
   };
 
