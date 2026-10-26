@@ -154,6 +154,35 @@ const User = () => {
       }));
 
       setAddresses(mappedAddresses);
+
+      // Nếu hồ sơ chưa có địa chỉ hoặc địa chỉ cũ không còn tồn tại,
+      // ưu tiên chọn địa chỉ mặc định trong danh sách đã lưu.
+      setProfileForm((prev) => {
+        const currentAddressExists = mappedAddresses.some((item) => {
+          const fullAddress =
+            item.fullAddress ||
+            [item.address, item.wardName, item.provinceName]
+              .filter(Boolean)
+              .join(", ");
+          return fullAddress === prev.address;
+        });
+
+        if (currentAddressExists) return prev;
+
+        const defaultAddress = mappedAddresses.find((item) => item.isDefault);
+        const fullAddress = defaultAddress
+          ? defaultAddress.fullAddress ||
+            [
+              defaultAddress.address,
+              defaultAddress.wardName,
+              defaultAddress.provinceName,
+            ]
+              .filter(Boolean)
+              .join(", ")
+          : "";
+
+        return { ...prev, address: fullAddress };
+      });
     } catch (error) {
       console.error("GET ADDRESSES ERROR:", error);
 
@@ -876,12 +905,15 @@ const User = () => {
               <form className="profile-form" onSubmit={handleUpdateProfile}>
                 <div className="profile-form-grid">
                   <div className="form-group">
-                    <label>Tên đăng nhập</label>
+                    <label>Tên người dùng</label>
 
                     <div className="input-with-icon">
                       <UserIcon size={17} />
 
-                      <input value={user.username || ""} disabled />
+                      <input
+                        value={user.name || user.username || ""}
+                        disabled
+                      />
                     </div>
                   </div>
 
@@ -928,16 +960,52 @@ const User = () => {
                   <div className="form-group full">
                     <label>Địa chỉ</label>
 
-                    <div className="input-with-icon">
+                    <div className="input-with-icon profile-address-select">
                       <Home size={17} />
 
-                      <input
+                      <select
                         name="address"
                         value={profileForm.address}
                         onChange={handleProfileChange}
-                        placeholder="Nhập địa chỉ"
-                      />
+                        disabled={addressLoading || addresses.length === 0}
+                      >
+                        <option value="">
+                          {addressLoading
+                            ? "Đang tải địa chỉ..."
+                            : addresses.length === 0
+                              ? "Bạn chưa có địa chỉ đã lưu"
+                              : "Chọn địa chỉ giao hàng"}
+                        </option>
+
+                        {addresses.map((address) => {
+                          const fullAddress =
+                            address.fullAddress ||
+                            [
+                              address.address,
+                              address.wardName,
+                              address.provinceName,
+                            ]
+                              .filter(Boolean)
+                              .join(", ");
+
+                          if (!fullAddress) return null;
+
+                          return (
+                            <option key={address.id} value={fullAddress}>
+                              {address.label ? `${address.label} - ` : ""}
+                              {fullAddress}
+                              {address.isDefault ? " (Mặc định)" : ""}
+                            </option>
+                          );
+                        })}
+                      </select>
                     </div>
+
+                    {addresses.length === 0 && !addressLoading && (
+                      <p className="profile-address-hint">
+                        Hãy thêm địa chỉ trong mục Địa chỉ để chọn tại đây.
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -1067,8 +1135,7 @@ const User = () => {
               <div className="user-panel-header">
                 <div>
                   <h1>Đơn hàng của tôi</h1>
-
-                  <p>Theo dõi các đơn hàng của bạn</p>
+                  <p>Theo dõi và quản lý các đơn hàng của bạn</p>
                 </div>
               </div>
 
@@ -1077,9 +1144,7 @@ const User = () => {
               ) : orders.length === 0 ? (
                 <div className="empty-orders">
                   <Package size={42} />
-
                   <h3>Chưa có đơn hàng</h3>
-
                   <p>Bạn chưa có đơn hàng nào</p>
 
                   <button onClick={() => navigate("/products")}>
@@ -1087,52 +1152,153 @@ const User = () => {
                   </button>
                 </div>
               ) : (
-                <div className="orders-list">
-                  {orders.map((order) => (
-                    <div className="order-card" key={order.id}>
-                      <div className="order-card-header">
-                        <div>
-                          <span>Mã đơn hàng</span>
+                <div className="user-orders-list">
+                  {orders.map((order) => {
+                    const items = order.items || [];
 
-                          <strong>#{order.id}</strong>
+                    const getProductImage = (item) => {
+                      const product =
+                        item?.variant?.product ||
+                        item?.product ||
+                        item?.variant?.Product;
+
+                      const images = product?.images || product?.Images || [];
+
+                      const primaryImage =
+                        images.find((image) => image.is_primary) || images[0];
+
+                      const imageUrl =
+                        item.image_url ||
+                        primaryImage?.image_url ||
+                        product?.image_url;
+
+                      if (!imageUrl) return "/placeholder-product.jpg";
+
+                      return imageUrl.startsWith("http")
+                        ? imageUrl
+                        : `http://localhost:4000${imageUrl}`;
+                    };
+
+                    const getProductName = (item) => {
+                      return (
+                        item.product_name ||
+                        item?.variant?.product?.name ||
+                        item?.product?.name ||
+                        item?.variant?.Product?.name ||
+                        "Sản phẩm"
+                      );
+                    };
+
+                    const formatPrice = (price) =>
+                      `${Number(price || 0).toLocaleString("vi-VN")}₫`;
+
+                    const statusLabels = {
+                      PENDING: "Chờ xác nhận",
+                      CONFIRMED: "Đã xác nhận",
+                      SHIPPING: "Đang giao hàng",
+                      DELIVERED: "Đã giao hàng",
+                      CANCELLED: "Đã hủy",
+                    };
+
+                    const statusClass =
+                      order.status?.toLowerCase().replace("_", "-") ||
+                      "default";
+
+                    return (
+                      <article className="user-order-card" key={order.id}>
+                        {/* Header */}
+                        <div className="user-order-header">
+                          <div className="user-order-code">
+                            <span>Mã đơn hàng</span>
+                            <strong>
+                              {order.order_code || `#${order.id}`}
+                            </strong>
+                          </div>
+
+                          <span className={`user-order-status ${statusClass}`}>
+                            {statusLabels[order.status] ||
+                              order.status ||
+                              "Không xác định"}
+                          </span>
                         </div>
 
-                        <span
-                          className={`order-status ${getOrderStatusClass(
-                            order.status,
-                          )}`}
-                        >
-                          {getOrderStatusText(order.status)}
-                        </span>
-                      </div>
-
-                      <div className="order-card-info">
-                        <span>{order.items?.length || 0} sản phẩm</span>
-
-                        <strong>
-                          {Number(order.total_amount || 0).toLocaleString(
-                            "vi-VN",
-                          )}
-                          ₫
-                        </strong>
-                      </div>
-
-                      <div className="order-card-footer">
-                        <span>
+                        {/* Ngày đặt */}
+                        <div className="user-order-date">
+                          Ngày đặt:{" "}
                           {order.created_at
                             ? new Date(order.created_at).toLocaleDateString(
                                 "vi-VN",
                               )
-                            : ""}
-                        </span>
+                            : "--"}
+                        </div>
 
-                        <button onClick={() => navigate(`/orders/${order.id}`)}>
-                          Xem chi tiết
-                          <ChevronRight size={15} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                        {/* Sản phẩm */}
+                        <div className="user-order-products">
+                          {items.length > 0 ? (
+                            items.map((item, index) => (
+                              <div
+                                className="user-order-product"
+                                key={item.id || `${order.id}-${index}`}
+                              >
+                                <img
+                                  className="user-order-product-image"
+                                  src={getProductImage(item)}
+                                  alt={getProductName(item)}
+                                  onError={(event) => {
+                                    event.currentTarget.onerror = null;
+                                    event.currentTarget.src =
+                                      "/placeholder-product.jpg";
+                                  }}
+                                />
+
+                                <div className="user-order-product-info">
+                                  <h3>{getProductName(item)}</h3>
+
+                                  {(item.color || item.size) && (
+                                    <p>
+                                      {item.color && `Màu: ${item.color}`}
+                                      {item.color && item.size && " · "}
+                                      {item.size && `Size: ${item.size}`}
+                                    </p>
+                                  )}
+
+                                  <span>Số lượng: {item.quantity || 1}</span>
+                                </div>
+
+                                <strong className="user-order-product-price">
+                                  {formatPrice(
+                                    Number(item.price || 0) *
+                                      Number(item.quantity || 1),
+                                  )}
+                                </strong>
+                              </div>
+                            ))
+                          ) : (
+                            <p className="user-order-no-products">
+                              Chưa có thông tin sản phẩm trong đơn hàng.
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Footer */}
+                        <div className="user-order-footer">
+                          <div className="user-order-total">
+                            <span>Tổng tiền</span>
+                            <strong>{formatPrice(order.total_amount)}</strong>
+                          </div>
+
+                          <button
+                            type="button"
+                            className="user-order-detail-button"
+                            onClick={() => navigate(`/orders/${order.id}`)}
+                          >
+                            Xem chi tiết
+                            <ChevronRight size={17} />
+                          </button>
+                        </div>
+                      </article>
+                    );
+                  })}
                 </div>
               )}
             </section>

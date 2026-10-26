@@ -16,6 +16,7 @@ function Cart() {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedIds, setSelectedIds] = useState([]);
 
   // Lấy hàm refresh cart từ CartContext
   const { fetchCart: refreshGlobalCart } = useCart();
@@ -30,7 +31,31 @@ function Cart() {
 
       const response = await getCart();
 
-      setCart(response?.data || response);
+      const cartData = response?.data || response;
+      setCart(cartData);
+
+      const cartItems = cartData?.items || [];
+      const savedSelection = sessionStorage.getItem(
+        "lumi_selected_cart_item_ids",
+      );
+
+      if (savedSelection) {
+        try {
+          const parsedIds = JSON.parse(savedSelection).map(String);
+          const validIds = parsedIds.filter((id) =>
+            cartItems.some((item) => String(item.id) === id),
+          );
+          setSelectedIds(
+            validIds.length
+              ? validIds
+              : cartItems.map((item) => String(item.id)),
+          );
+        } catch {
+          setSelectedIds(cartItems.map((item) => String(item.id)));
+        }
+      } else {
+        setSelectedIds(cartItems.map((item) => String(item.id)));
+      }
     } catch (error) {
       console.error("Get cart error:", error);
 
@@ -48,6 +73,31 @@ function Cart() {
   }, []);
 
   const items = cart?.items || [];
+  const allSelected =
+    items.length > 0 &&
+    items.every((item) => selectedIds.includes(String(item.id)));
+  const selectedItems = items.filter((item) =>
+    selectedIds.includes(String(item.id)),
+  );
+
+  const handleSelectItem = (itemId, checked) => {
+    setSelectedIds((current) => {
+      const next = checked
+        ? [...new Set([...current, String(itemId)])]
+        : current.filter((id) => id !== String(itemId));
+      sessionStorage.setItem(
+        "lumi_selected_cart_item_ids",
+        JSON.stringify(next),
+      );
+      return next;
+    });
+  };
+
+  const handleSelectAll = (checked) => {
+    const next = checked ? items.map((item) => String(item.id)) : [];
+    setSelectedIds(next);
+    sessionStorage.setItem("lumi_selected_cart_item_ids", JSON.stringify(next));
+  };
 
   // =========================
   // Lấy hình ảnh sản phẩm
@@ -72,7 +122,7 @@ function Cart() {
   // =========================
   // Tính tạm tính
   // =========================
-  const subtotal = items.reduce(
+  const subtotal = selectedItems.reduce(
     (total, item) => total + getItemPrice(item) * Number(item.quantity || 0),
     0,
   );
@@ -80,7 +130,7 @@ function Cart() {
   // =========================
   // Phí vận chuyển
   // =========================
-  const shippingFee = items.length > 0 ? 30000 : 0;
+  const shippingFee = selectedItems.length > 0 ? 30000 : 0;
 
   // =========================
   // Tổng tiền
@@ -181,7 +231,10 @@ function Cart() {
           <div className="cart-heading">
             <h1>Giỏ hàng</h1>
 
-            <p>{items.length} sản phẩm</p>
+            <p>
+              {items.length} sản phẩm trong giỏ · {selectedItems.length} sản
+              phẩm được chọn
+            </p>
           </div>
 
           {/* Empty cart */}
@@ -212,6 +265,19 @@ function Cart() {
                   Cart Items
               ========================= */}
               <section className="cart-items">
+                <div className="cart-select-all">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      onChange={(event) =>
+                        handleSelectAll(event.target.checked)
+                      }
+                    />
+                    Chọn tất cả ({items.length})
+                  </label>
+                </div>
+
                 <div className="cart-items-header">
                   <span>Sản phẩm</span>
                   <span>Đơn giá</span>
@@ -229,7 +295,22 @@ function Cart() {
                   const itemTotal = price * quantity;
 
                   return (
-                    <article className="cart-item" key={item.id}>
+                    <article
+                      className={`cart-item ${selectedIds.includes(String(item.id)) ? "is-selected" : ""}`}
+                      key={item.id}
+                    >
+                      <label
+                        className="cart-item-select"
+                        aria-label={`Chọn ${product?.name || "sản phẩm"}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(String(item.id))}
+                          onChange={(event) =>
+                            handleSelectItem(item.id, event.target.checked)
+                          }
+                        />
+                      </label>
                       {/* =================
                           Product
                       ================= */}
@@ -354,7 +435,22 @@ function Cart() {
                 <button
                   type="button"
                   className="cart-checkout-button"
-                  onClick={() => navigate("/checkout")}
+                  onClick={() => {
+                    if (selectedItems.length === 0) {
+                      alert(
+                        "Vui lòng chọn ít nhất một sản phẩm để thanh toán.",
+                      );
+                      return;
+                    }
+                    sessionStorage.setItem(
+                      "lumi_selected_cart_item_ids",
+                      JSON.stringify(
+                        selectedItems.map((item) => String(item.id)),
+                      ),
+                    );
+                    navigate("/checkout");
+                  }}
+                  disabled={selectedItems.length === 0}
                 >
                   Tiến hành thanh toán
                 </button>

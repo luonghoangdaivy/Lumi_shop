@@ -7,6 +7,9 @@ const CartContext = createContext(null);
 export function CartProvider({ children }) {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(false);
+  const clearCart = () => {
+    setCart(null);
+  };
 
   const fetchCart = async () => {
     const token = localStorage.getItem("accessToken");
@@ -50,6 +53,7 @@ export function CartProvider({ children }) {
         cartCount,
         loading,
         fetchCart,
+        clearCart,
       }}
     >
       {children}

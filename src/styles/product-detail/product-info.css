@@ -238,3 +238,113 @@
     font-size: 18px;
   }
 }
+
+/* ===== Quantity selector ===== */
+.product-quantity-option {
+  margin-top: 24px;
+}
+
+.product-quantity-control {
+  display: inline-flex;
+  align-items: center;
+  height: 42px;
+  margin-top: 12px;
+  overflow: hidden;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.product-quantity-control button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: #fff;
+  color: #111;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.product-quantity-control button:hover:not(:disabled) {
+  background: #f3f4f6;
+}
+
+.product-quantity-control button:disabled {
+  color: #b8b8b8;
+  cursor: not-allowed;
+}
+
+.product-quantity-control input {
+  width: 48px;
+  height: 100%;
+  padding: 0;
+  border: none;
+  border-right: 1px solid #e5e7eb;
+  border-left: 1px solid #e5e7eb;
+  border-radius: 0;
+  outline: none;
+  background: #fff;
+  color: #111;
+  font-size: 16px;
+  text-align: center;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.product-quantity-control input::-webkit-inner-spin-button,
+.product-quantity-control input::-webkit-outer-spin-button {
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+/* ===== Purchase buttons ===== */
+.product-purchase-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.product-purchase-actions > button {
+  width: 100%;
+  min-height: 52px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.product-purchase-actions > button:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.product-purchase-actions > button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .product-quantity-option {
+    margin-top: 20px;
+  }
+
+  .product-purchase-actions {
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .product-purchase-actions > button {
+    min-height: 48px;
+    font-size: 15px;
+  }
+}

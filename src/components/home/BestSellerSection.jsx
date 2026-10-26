@@ -17,7 +17,7 @@ function BestSellerSection() {
         setLoading(true);
         setError("");
 
-        const response = await getProducts();
+        const response = await getProducts({ featured: true });
 
         const data = response?.data || response;
 

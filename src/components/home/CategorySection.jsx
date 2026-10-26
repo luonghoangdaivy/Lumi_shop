@@ -1,4 +1,3 @@
-import { Shirt, Spline, Layers3 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import "../../styles/home/category-section.css";
@@ -9,28 +8,24 @@ const categories = [
     name: "Áo",
     slug: "ao",
     description: "Phong cách hằng ngày",
-    icon: Shirt,
   },
   {
     id: 2,
     name: "Quần",
     slug: "quan",
     description: "Thoải mái & hiện đại",
-    icon: Spline,
   },
   {
     id: 3,
     name: "Váy",
     slug: "vay",
     description: "Thanh lịch & nữ tính",
-    icon: Shirt,
   },
   {
     id: 4,
     name: "Áo khoác",
     slug: "ao-khoac",
     description: "Phong cách cá tính",
-    icon: Layers3,
   },
 ];
 
@@ -38,7 +33,6 @@ function CategorySection() {
   return (
     <section className="home-section category-section">
       <div className="home-section-container">
-        {/* Heading */}
         <div className="category-heading">
           <div>
             <span className="category-eyebrow">SHOP BY CATEGORY</span>
@@ -49,31 +43,21 @@ function CategorySection() {
           <p>Tìm kiếm những sản phẩm phù hợp với phong cách của bạn.</p>
         </div>
 
-        {/* Categories */}
         <div className="category-grid">
-          {categories.map((category) => {
-            const Icon = category.icon;
+          {categories.map((category) => (
+            <Link
+              key={category.id}
+              to={`/products?category=${category.slug}`}
+              className="category-card"
+            >
+              <div className="category-card-content">
+                <h3>{category.name}</h3>
+                <p>{category.description}</p>
+              </div>
 
-            return (
-              <Link
-                key={category.id}
-                to={`/products?category=${category.slug}`}
-                className="category-card"
-              >
-                <div className="category-card-icon">
-                  <Icon size={34} strokeWidth={1.4} />
-                </div>
-
-                <div className="category-card-content">
-                  <h3>{category.name}</h3>
-
-                  <p>{category.description}</p>
-                </div>
-
-                <span className="category-card-arrow">→</span>
-              </Link>
-            );
-          })}
+              <span className="category-card-arrow">→</span>
+            </Link>
+          ))}
         </div>
       </div>
     </section>

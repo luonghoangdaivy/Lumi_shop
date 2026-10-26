@@ -52,6 +52,10 @@ const formatDate = (date) => {
   return parsed.toLocaleString("vi-VN");
 };
 
+// Hiển thị mã đơn riêng; dùng ID làm dự phòng cho dữ liệu cũ.
+const getOrderCode = (order) =>
+  order?.order_code || `LUMI-${String(order?.id ?? "").padStart(6, "0")}`;
+
 const extractOrders = (responseData) => {
   if (Array.isArray(responseData)) return responseData;
   if (Array.isArray(responseData?.data)) return responseData.data;
@@ -103,6 +107,9 @@ export default function AdminOrders() {
     return orders.filter((order) => {
       const matchesSearch =
         !search ||
+        String(getOrderCode(order))
+          .toLowerCase()
+          .includes(search) ||
         String(order.id ?? "")
           .toLowerCase()
           .includes(search) ||
@@ -142,7 +149,7 @@ export default function AdminOrders() {
     }
 
     const confirmed = window.confirm(
-      `Cập nhật đơn #${order.id} từ "${ORDER_STATUSES[order.status]}" sang "${ORDER_STATUSES[nextStatus]}"?`,
+      `Cập nhật đơn ${getOrderCode(order)} từ "${ORDER_STATUSES[order.status]}" sang "${ORDER_STATUSES[nextStatus]}"?`,
     );
 
     if (!confirmed) return;
@@ -155,7 +162,7 @@ export default function AdminOrders() {
       await updateOrderStatus(order.id, nextStatus);
 
       updateLocalOrder(order.id, { status: nextStatus });
-      setSuccess(`Đã cập nhật trạng thái đơn #${order.id}.`);
+      setSuccess(`Đã cập nhật trạng thái đơn ${getOrderCode(order)}.`);
     } catch (err) {
       setError(
         err.response?.data?.message ||
@@ -173,7 +180,7 @@ export default function AdminOrders() {
     }
 
     const confirmed = window.confirm(
-      `Bạn có chắc muốn hủy đơn hàng #${order.id}?`,
+      `Bạn có chắc muốn hủy đơn hàng ${getOrderCode(order)}?`,
     );
 
     if (!confirmed) return;
@@ -186,7 +193,7 @@ export default function AdminOrders() {
       await cancelOrder(order.id);
 
       updateLocalOrder(order.id, { status: "CANCELLED" });
-      setSuccess(`Đã hủy đơn hàng #${order.id}.`);
+      setSuccess(`Đã hủy đơn hàng ${getOrderCode(order)}.`);
     } catch (err) {
       setError(err.response?.data?.message || "Không thể hủy đơn hàng.");
     } finally {
@@ -343,7 +350,7 @@ export default function AdminOrders() {
                   return (
                     <tr key={order.id}>
                       <td>
-                        <strong className="orders-id">#{order.id}</strong>
+                        <strong className="orders-id">{getOrderCode(order)}</strong>
                         <span className="orders-subtext">
                           {order.payment_method === "COD"
                             ? "COD"
@@ -465,7 +472,7 @@ export default function AdminOrders() {
           >
             <div className="order-modal-header">
               <div>
-                <h2>Chi tiết đơn hàng #{selectedOrderForDetail.id}</h2>
+                <h2>Chi tiết đơn hàng {getOrderCode(selectedOrderForDetail)}</h2>
                 <p>Đặt ngày {formatDate(selectedOrderForDetail.created_at)}</p>
               </div>
               <button

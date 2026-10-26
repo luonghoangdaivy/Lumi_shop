@@ -8,6 +8,16 @@ function Hero() {
 
   return (
     <section className="hero">
+      {/* [MỚI] Lớp ảnh nền: phủ toàn bộ section.
+          Đặt TRƯỚC nội dung trong code để nó nằm phía dưới (kết hợp z-index trong CSS). */}
+      <div className="hero-bg">
+        <img
+          src="/images/lumi_banner.png"
+          alt="Bộ sưu tập thời trang LUMI 2026"
+        />
+      </div>
+
+      {/* Lớp nội dung: nằm trên ảnh nền */}
       <div className="hero-container">
         <div className="hero-content">
           <span className="hero-eyebrow">NEW COLLECTION 2026</span>
@@ -42,22 +52,19 @@ function Hero() {
             </button>
           </div>
         </div>
+      </div>
 
-        <div className="hero-image-wrapper">
-          <div className="hero-image">
-            <img src="" alt="" />
-          </div>
+      {/* [DI CHUYỂN] Thẻ nổi giờ là con trực tiếp của .hero
+          (không còn nằm trong .hero-image-wrapper vì wrapper này đã bỏ).
+          Nó được định vị tuyệt đối so với toàn bộ section. */}
+      <div className="hero-floating-card">
+        <span className="hero-floating-label">LUMI</span>
 
-          <div className="hero-floating-card">
-            <span className="hero-floating-label">LUMI</span>
-
-            <strong>
-              Everyday
-              <br />
-              Essentials
-            </strong>
-          </div>
-        </div>
+        <strong>
+          Everyday
+          <br />
+          Essentials
+        </strong>
       </div>
     </section>
   );

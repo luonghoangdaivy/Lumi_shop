@@ -1,4 +1,4 @@
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag, Zap, Minus, Plus } from "lucide-react";
 
 import Button from "../common/Button";
 
@@ -13,7 +13,10 @@ function ProductInfo({
   selectedVariant,
   onColorChange,
   onSizeChange,
+  quantity,
+  onQuantityChange,
   onAddToCart,
+  onBuyNow,
 }) {
   const price = Number(product?.price || 0);
 
@@ -112,18 +115,78 @@ function ProductInfo({
         )}
       </div>
 
-      {/* Add cart */}
+      {/* Quantity */}
 
-      <Button
-        variant="primary"
-        size="large"
-        fullWidth
-        disabled={!selectedVariant || Number(selectedVariant.stock) <= 0}
-        onClick={onAddToCart}
-      >
-        <ShoppingBag size={18} />
-        Thêm vào giỏ hàng
-      </Button>
+      <div className="product-option product-quantity-option">
+        <div className="product-option-header">
+          <span>Số lượng</span>
+          <strong>
+            {selectedVariant ? `Tối đa ${selectedVariant.stock}` : "—"}
+          </strong>
+        </div>
+
+        <div className="product-quantity-control">
+          <button
+            type="button"
+            aria-label="Giảm số lượng"
+            disabled={
+              !selectedVariant ||
+              Number(selectedVariant.stock) <= 0 ||
+              quantity <= 1
+            }
+            onClick={() => onQuantityChange(quantity - 1)}
+          >
+            <Minus size={16} />
+          </button>
+          <input
+            type="number"
+            min="1"
+            max={Number(selectedVariant?.stock) || 1}
+            value={quantity}
+            aria-label="Số lượng sản phẩm"
+            disabled={!selectedVariant || Number(selectedVariant.stock) <= 0}
+            onChange={(event) => onQuantityChange(event.target.value)}
+          />
+          <button
+            type="button"
+            aria-label="Tăng số lượng"
+            disabled={
+              !selectedVariant ||
+              Number(selectedVariant.stock) <= 0 ||
+              quantity >= Number(selectedVariant.stock)
+            }
+            onClick={() => onQuantityChange(quantity + 1)}
+          >
+            <Plus size={16} />
+          </button>
+        </div>
+      </div>
+
+      {/* Purchase actions */}
+
+      <div className="product-purchase-actions">
+        <Button
+          variant="primary"
+          size="large"
+          fullWidth
+          disabled={!selectedVariant || Number(selectedVariant.stock) <= 0}
+          onClick={onAddToCart}
+        >
+          <ShoppingBag size={18} />
+          Thêm vào giỏ hàng
+        </Button>
+
+        <Button
+          variant="secondary"
+          size="large"
+          fullWidth
+          disabled={!selectedVariant || Number(selectedVariant.stock) <= 0}
+          onClick={onBuyNow}
+        >
+          <Zap size={18} />
+          Mua ngay
+        </Button>
+      </div>
     </div>
   );
 }

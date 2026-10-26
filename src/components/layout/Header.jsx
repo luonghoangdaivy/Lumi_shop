@@ -42,7 +42,7 @@ const categories = [
 function Header() {
   const navigate = useNavigate();
 
-  const { cartCount } = useCart();
+  const { cartCount, clearCart } = useCart();
   const { favoriteCount } = useFavorites();
 
   const { user, loading: authLoading, isAuthenticated, logout } = useAuth();
@@ -78,6 +78,7 @@ function Header() {
   // =========================
 
   const handleLogout = () => {
+    clearCart();
     logout();
 
     setUserMenuOpen(false);
