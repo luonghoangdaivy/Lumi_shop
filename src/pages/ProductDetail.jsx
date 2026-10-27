@@ -71,21 +71,69 @@ function ProductDetail() {
   }, [id]);
 
   /*
-   * Load products for Related Products
+   * Load related products
+   * Chỉ lấy sản phẩm cùng danh mục và loại sản phẩm đang xem
    */
   useEffect(() => {
+    if (!product?.id) {
+      setRelatedProducts([]);
+      return;
+    }
+
+    let cancelled = false;
+
     const fetchRelatedProducts = async () => {
       try {
         const response = await getProducts();
 
-        setRelatedProducts(response?.data || []);
+        // Hỗ trợ nhiều định dạng dữ liệu API trả về
+        const result = response?.data ?? response;
+        const productList = Array.isArray(result)
+          ? result
+          : Array.isArray(result?.data)
+            ? result.data
+            : Array.isArray(result?.products)
+              ? result.products
+              : [];
+
+        // Lấy ID danh mục, hỗ trợ cả category_id và category.id
+        const currentCategoryId = product.category_id ?? product.category?.id;
+
+        const related = productList.filter((item) => {
+          // Không hiển thị chính sản phẩm đang xem
+          if (String(item.id) === String(product.id)) {
+            return false;
+          }
+
+          const itemCategoryId = item.category_id ?? item.category?.id;
+
+          // Nếu không có thông tin danh mục thì không thể xác định sản phẩm tương tự
+          if (currentCategoryId == null || itemCategoryId == null) {
+            return false;
+          }
+
+          // Chỉ lấy sản phẩm cùng danh mục
+          return String(itemCategoryId) === String(currentCategoryId);
+        });
+
+        if (!cancelled) {
+          setRelatedProducts(related);
+        }
       } catch (error) {
         console.error("Get related products error:", error);
+
+        if (!cancelled) {
+          setRelatedProducts([]);
+        }
       }
     };
 
     fetchRelatedProducts();
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [product?.id, product?.category_id, product?.category?.id]);
 
   /*
    * Colors
