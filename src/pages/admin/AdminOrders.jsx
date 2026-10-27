@@ -9,10 +9,15 @@ import {
   X,
 } from "lucide-react";
 
-import { getAdminOrders as getOrders, cancelOrder, updateOrderStatus } from "../../api/order.api";
+import {
+  getAdminOrders as getOrders,
+  cancelOrder,
+  updateOrderStatus,
+} from "../../api/order.api";
 
 import "../../styles/admin/admin-orders.css";
 
+const ITEMS_PER_PAGE = 10;
 
 const ORDER_STATUSES = {
   PENDING: "Chờ xác nhận",
@@ -63,8 +68,6 @@ const extractOrders = (responseData) => {
   return null;
 };
 
-const API_URL = "http://localhost:4000";
-
 export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
   const [keyword, setKeyword] = useState("");
@@ -75,6 +78,8 @@ export default function AdminOrders() {
   const [processingId, setProcessingId] = useState(null);
   const [selectedOrderForDetail, setSelectedOrderForDetail] = useState(null);
 
+  // State phân trang
+  const [currentPage, setCurrentPage] = useState(1);
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -101,15 +106,14 @@ export default function AdminOrders() {
     fetchOrders();
   }, [fetchOrders]);
 
+  // Tìm kiếm và lọc đơn hàng trên toàn bộ dữ liệu đã tải
   const filteredOrders = useMemo(() => {
     const search = keyword.trim().toLowerCase();
 
     return orders.filter((order) => {
       const matchesSearch =
         !search ||
-        String(getOrderCode(order))
-          .toLowerCase()
-          .includes(search) ||
+        String(getOrderCode(order)).toLowerCase().includes(search) ||
         String(order.id ?? "")
           .toLowerCase()
           .includes(search) ||
@@ -130,10 +134,44 @@ export default function AdminOrders() {
     });
   }, [orders, keyword, statusFilter]);
 
+  // Tính tổng số trang
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredOrders.length / ITEMS_PER_PAGE),
+  );
+
+  // Trở về trang hợp lệ khi dữ liệu hoặc bộ lọc thay đổi
+  useEffect(() => {
+    setCurrentPage((current) => Math.min(current, totalPages));
+  }, [totalPages]);
+
+  // Khi tìm kiếm hoặc lọc trạng thái, quay về trang đầu
+  const handleKeywordChange = (value) => {
+    setKeyword(value);
+    setCurrentPage(1);
+  };
+
+  const handleStatusFilterChange = (value) => {
+    setStatusFilter(value);
+    setCurrentPage(1);
+  };
+
+  // Chỉ lấy đơn hàng thuộc trang hiện tại
+  const paginatedOrders = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+
+    return filteredOrders.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredOrders, currentPage]);
+
+  const handlePageChange = (page) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+  };
+
   const updateLocalOrder = (id, changes) => {
     setOrders((current) =>
       current.map((order) =>
-        order.id === id ? { ...order, ...changes } : order,
+        String(order.id) === String(id) ? { ...order, ...changes } : order,
       ),
     );
   };
@@ -271,7 +309,7 @@ export default function AdminOrders() {
             <Search size={18} />
             <input
               value={keyword}
-              onChange={(event) => setKeyword(event.target.value)}
+              onChange={(event) => handleKeywordChange(event.target.value)}
               placeholder="Tìm mã đơn, mã khách hàng, số điện thoại..."
               aria-label="Tìm kiếm đơn hàng"
             />
@@ -280,7 +318,7 @@ export default function AdminOrders() {
           <select
             className="orders-filter"
             value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value)}
+            onChange={(event) => handleStatusFilterChange(event.target.value)}
             aria-label="Lọc trạng thái đơn hàng"
           >
             <option value="ALL">Tất cả trạng thái</option>
@@ -343,14 +381,16 @@ export default function AdminOrders() {
                   </td>
                 </tr>
               ) : (
-                filteredOrders.map((order) => {
+                paginatedOrders.map((order) => {
                   const nextStatuses =
                     ALLOWED_NEXT_STATUSES[order.status] || [];
 
                   return (
                     <tr key={order.id}>
                       <td>
-                        <strong className="orders-id">{getOrderCode(order)}</strong>
+                        <strong className="orders-id">
+                          {getOrderCode(order)}
+                        </strong>
                         <span className="orders-subtext">
                           {order.payment_method === "COD"
                             ? "COD"
@@ -399,7 +439,9 @@ export default function AdminOrders() {
                             disabled={processingId === order.id}
                             onChange={(event) => {
                               const value = event.target.value;
-                              if (value) handleStatusChange(order, value);
+                              if (value) {
+                                handleStatusChange(order, value);
+                              }
                             }}
                             aria-label={`Cập nhật trạng thái đơn ${order.id}`}
                           >
@@ -456,8 +498,54 @@ export default function AdminOrders() {
           </table>
         </div>
 
+        {/* Phân trang */}
         <footer className="orders-footer">
-          Hiển thị {filteredOrders.length} / {orders.length} đơn hàng
+          <span className="orders-footer-info">
+            {filteredOrders.length === 0
+              ? "Hiển thị 0 đơn hàng"
+              : `Hiển thị ${(currentPage - 1) * ITEMS_PER_PAGE + 1}–${Math.min(
+                  currentPage * ITEMS_PER_PAGE,
+                  filteredOrders.length,
+                )} / ${filteredOrders.length} đơn hàng`}
+          </span>
+
+          <div className="orders-pagination">
+            <button
+              type="button"
+              className="orders-page-btn"
+              disabled={currentPage === 1 || loading}
+              onClick={() => handlePageChange(currentPage - 1)}
+            >
+              Trang trước
+            </button>
+
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+              (page) => (
+                <button
+                  type="button"
+                  key={page}
+                  className={`orders-page-btn ${
+                    currentPage === page ? "active" : ""
+                  }`}
+                  aria-label={`Trang ${page}`}
+                  aria-current={currentPage === page ? "page" : undefined}
+                  disabled={loading}
+                  onClick={() => handlePageChange(page)}
+                >
+                  {page}
+                </button>
+              ),
+            )}
+
+            <button
+              type="button"
+              className="orders-page-btn"
+              disabled={currentPage === totalPages || loading}
+              onClick={() => handlePageChange(currentPage + 1)}
+            >
+              Trang sau
+            </button>
+          </div>
         </footer>
       </section>
 
@@ -468,12 +556,20 @@ export default function AdminOrders() {
         >
           <div
             className="order-modal-content"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
           >
             <div className="order-modal-header">
               <div>
-                <h2>Chi tiết đơn hàng {getOrderCode(selectedOrderForDetail)}</h2>
-                <p>Đặt ngày {formatDate(selectedOrderForDetail.created_at)}</p>
+                <h2>
+                  Chi tiết đơn hàng {getOrderCode(selectedOrderForDetail)}
+                </h2>
+                <p>
+                  Đặt ngày{" "}
+                  {formatDate(
+                    selectedOrderForDetail.created_at ||
+                      selectedOrderForDetail.createdAt,
+                  )}
+                </p>
               </div>
               <button
                 type="button"
@@ -486,44 +582,70 @@ export default function AdminOrders() {
 
             <div className="order-modal-body">
               <div className="order-modal-section">
-                <h3>Thông tin khách hàng & Giao hàng</h3>
+                <h3>Thông tin khách hàng &amp; Giao hàng</h3>
                 <div className="order-modal-grid">
                   <div>
                     <label>Khách hàng:</label>
                     <span>
                       {selectedOrderForDetail.user?.username ||
+                        selectedOrderForDetail.user?.name ||
                         selectedOrderForDetail.user?.email ||
                         "Khách vãng lai"}
                     </span>
                   </div>
+
                   <div>
                     <label>Email:</label>
                     <span>{selectedOrderForDetail.user?.email || "—"}</span>
                   </div>
+
                   <div>
                     <label>Số điện thoại:</label>
-                    <span>{selectedOrderForDetail.phone || "—"}</span>
+                    <span>
+                      {selectedOrderForDetail.shipping_phone ||
+                        selectedOrderForDetail.phone ||
+                        "—"}
+                    </span>
                   </div>
+
                   <div>
                     <label>Trạng thái đơn:</label>
-                    <span className={`orders-status ${(selectedOrderForDetail.status || "PENDING").toLowerCase()}`}>
-                      {ORDER_STATUSES[selectedOrderForDetail.status] || selectedOrderForDetail.status}
+                    <span
+                      className={`orders-status ${(selectedOrderForDetail.status || "PENDING").toLowerCase()}`}
+                    >
+                      {ORDER_STATUSES[selectedOrderForDetail.status] ||
+                        selectedOrderForDetail.status ||
+                        "Chưa rõ"}
                     </span>
                   </div>
+
                   <div>
                     <label>Phương thức TT:</label>
-                    <span>{selectedOrderForDetail.payment_method || "COD"}</span>
-                  </div>
-                  <div>
-                    <label>Trạng thái TT:</label>
-                    <span className={`orders-payment ${(selectedOrderForDetail.payment_status || "PENDING").toLowerCase()}`}>
-                      {PAYMENT_STATUSES[selectedOrderForDetail.payment_status] || selectedOrderForDetail.payment_status}
+                    <span>
+                      {selectedOrderForDetail.payment_method || "COD"}
                     </span>
                   </div>
+
+                  <div>
+                    <label>Trạng thái TT:</label>
+                    <span
+                      className={`orders-payment ${(selectedOrderForDetail.payment_status || "PENDING").toLowerCase()}`}
+                    >
+                      {PAYMENT_STATUSES[
+                        selectedOrderForDetail.payment_status
+                      ] ||
+                        selectedOrderForDetail.payment_status ||
+                        "Chưa rõ"}
+                    </span>
+                  </div>
+
                   <div className="order-modal-full">
                     <label>Địa chỉ nhận hàng:</label>
-                    <span>{selectedOrderForDetail.shipping_address || "—"}</span>
+                    <span>
+                      {selectedOrderForDetail.shipping_address || "—"}
+                    </span>
                   </div>
+
                   {selectedOrderForDetail.note && (
                     <div className="order-modal-full">
                       <label>Ghi chú:</label>
@@ -535,6 +657,7 @@ export default function AdminOrders() {
 
               <div className="order-modal-section">
                 <h3>Sản phẩm ({selectedOrderForDetail.items?.length || 0})</h3>
+
                 <div className="order-modal-table-wrap">
                   <table className="order-modal-table">
                     <thead>
@@ -546,24 +669,38 @@ export default function AdminOrders() {
                         <th>Tạm tính</th>
                       </tr>
                     </thead>
+
                     <tbody>
                       {selectedOrderForDetail.items?.map((item) => (
                         <tr key={item.id}>
-                          <td>{item.variant?.product?.name || `Mã sp #${item.id}`}</td>
                           <td>
-                            {[item.variant?.color, item.variant?.size].filter(Boolean).join(" / ") || "—"}
+                            {item.variant?.product?.name || `Mã sp #${item.id}`}
                           </td>
+
+                          <td>
+                            {[item.variant?.color, item.variant?.size]
+                              .filter(Boolean)
+                              .join(" / ") || "—"}
+                          </td>
+
                           <td>{formatCurrency(item.price)}</td>
                           <td>{item.quantity}</td>
-                          <td>{formatCurrency(Number(item.price) * Number(item.quantity))}</td>
+                          <td>
+                            {formatCurrency(
+                              Number(item.price) * Number(item.quantity),
+                            )}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
+
                 <div className="order-modal-total">
                   <span>Tổng tiền thanh toán:</span>
-                  <strong>{formatCurrency(selectedOrderForDetail.total_amount)}</strong>
+                  <strong>
+                    {formatCurrency(selectedOrderForDetail.total_amount)}
+                  </strong>
                 </div>
               </div>
             </div>

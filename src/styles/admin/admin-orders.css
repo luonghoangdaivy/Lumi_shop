@@ -774,3 +774,71 @@
     min-width: 1120px;
   }
 }
+
+/* Phân trang đơn hàng */
+.orders-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 18px 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.orders-footer-info {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.orders-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.orders-page-btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #374151;
+  font-size: 14px;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    color 0.2s,
+    border-color 0.2s;
+}
+
+.orders-page-btn:hover:not(:disabled) {
+  border-color: #111827;
+  color: #111827;
+}
+
+.orders-page-btn.active {
+  border-color: #111827;
+  background: #111827;
+  color: #fff;
+  font-weight: 600;
+}
+
+.orders-page-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+@media (max-width: 640px) {
+  .orders-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .orders-pagination {
+    justify-content: flex-start;
+  }
+}

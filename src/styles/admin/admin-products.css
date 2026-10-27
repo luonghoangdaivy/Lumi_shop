@@ -237,3 +237,71 @@
     max-width: none;
   }
 }
+
+/* Phân trang quản lý sản phẩm */
+.admin-products__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 18px 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.admin-products__pagination-info {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.admin-products__pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.admin-products__page-btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #374151;
+  font-size: 14px;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    color 0.2s,
+    border-color 0.2s;
+}
+
+.admin-products__page-btn:hover:not(:disabled) {
+  border-color: #111827;
+  color: #111827;
+}
+
+.admin-products__page-btn.active {
+  border-color: #111827;
+  background: #111827;
+  color: #fff;
+  font-weight: 600;
+}
+
+.admin-products__page-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+@media (max-width: 640px) {
+  .admin-products__pagination {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-products__pagination-controls {
+    justify-content: flex-start;
+  }
+}
