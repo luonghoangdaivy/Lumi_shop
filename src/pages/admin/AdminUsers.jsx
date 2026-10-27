@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Search,
   Users,
@@ -11,7 +11,10 @@ import {
   Phone,
   MapPin,
   CalendarDays,
+  Ban,
+  CheckCircle,
 } from "lucide-react";
+
 import api from "../../api/axios";
 import "../../styles/admin/admin-users.css";
 
@@ -23,6 +26,18 @@ const formatDate = (date) => {
   if (Number.isNaN(value.getTime())) return "Chưa có thông tin";
 
   return value.toLocaleDateString("vi-VN");
+};
+
+// Chuẩn hóa role vì API/database có thể trả khác kiểu chữ.
+const normalizeRole = (role) => {
+  const value = String(role || "")
+    .trim()
+    .toUpperCase();
+
+  if (["ADMIN", "ADMINISTRATOR"].includes(value)) return "ADMIN";
+  if (["USER", "CUSTOMER", "CLIENT"].includes(value)) return "USER";
+
+  return value;
 };
 
 const getInitials = (name) => {
@@ -37,28 +52,38 @@ const getInitials = (name) => {
     .toUpperCase();
 };
 
+const isUserBanned = (user) =>
+  Boolean(user?.is_banned ?? user?.isBanned ?? user?.banned ?? false);
+
+const getUserList = (response) => {
+  const result = response?.data;
+
+  if (Array.isArray(result)) return result;
+  if (Array.isArray(result?.data)) return result.data;
+  if (Array.isArray(result?.users)) return result.users;
+
+  return [];
+};
+
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
   const [role, setRole] = useState("");
+  const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
+  const [changingStatus, setChangingStatus] = useState(false);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     setError("");
 
     try {
-      const response = await api.get("/users", {
-        params: {
-          search: search.trim(),
-          role,
-        },
-      });
-
-      const result = response.data;
-      const userList = Array.isArray(result) ? result : result.data;
+      // Lấy danh sách đầy đủ rồi lọc tại frontend.
+      // Cách này tránh trường hợp backend chưa xử lý đúng query role.
+      const response = await api.get("/users");
+      const userList = getUserList(response);
 
       if (!Array.isArray(userList)) {
         throw new Error("Dữ liệu người dùng trả về không hợp lệ.");
@@ -72,20 +97,130 @@ export default function AdminUsers() {
       setError(
         err.response?.data?.message ||
           err.message ||
-          "Không thể tải danh sách khách hàng.",
+          "Không thể tải danh sách người dùng.",
       );
     } finally {
       setLoading(false);
     }
-  }, [search, role]);
+  }, []);
 
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
 
-  const totalAdmins = users.filter((user) => user.role === "ADMIN").length;
+  const filteredUsers = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
 
-  const totalCustomers = users.filter((user) => user.role === "USER").length;
+    return users.filter((user) => {
+      const userRole = normalizeRole(user.role);
+
+      const matchesRole = !role || userRole === role;
+
+      const matchesSearch =
+        !keyword ||
+        [
+          user.name,
+          user.full_name,
+          user.username,
+          user.email,
+          user.phone,
+          String(user.id ?? ""),
+        ].some((value) =>
+          String(value || "")
+            .toLowerCase()
+            .includes(keyword),
+        );
+
+      const banned = isUserBanned(user);
+
+      const matchesStatus =
+        !status ||
+        (status === "BANNED" && banned) ||
+        (status === "ACTIVE" && !banned);
+
+      return matchesRole && matchesSearch && matchesStatus;
+    });
+  }, [users, search, role, status]);
+
+  const totalAdmins = users.filter(
+    (user) => normalizeRole(user.role) === "ADMIN",
+  ).length;
+
+  const totalCustomers = users.filter(
+    (user) => normalizeRole(user.role) === "USER",
+  ).length;
+
+  const updateSelectedUser = (updatedUser) => {
+    setUsers((current) =>
+      current.map((user) =>
+        String(user.id) === String(updatedUser.id) ? updatedUser : user,
+      ),
+    );
+
+    setSelectedUser(updatedUser);
+  };
+
+  const handleToggleBan = async () => {
+    if (!selectedUser || changingStatus) return;
+
+    const banned = isUserBanned(selectedUser);
+    const action = banned ? "mở khóa" : "khóa";
+
+    const confirmed = window.confirm(
+      `Bạn có chắc muốn ${action} tài khoản "${selectedUser.name || selectedUser.email}"?`,
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setChangingStatus(true);
+
+      /*
+       * Endpoint dự kiến:
+       * PATCH /users/:id/ban
+       *
+       * Backend cần hỗ trợ endpoint này và trả về user
+       * có trường is_banned hoặc isBanned.
+       */
+      const response = await api.patch(`/users/${selectedUser.id}/ban`, {
+        is_banned: !banned,
+      });
+
+      const result = response.data?.data || response.data;
+
+      const updatedUser = {
+        ...selectedUser,
+        ...result,
+        is_banned: result?.is_banned ?? result?.isBanned ?? !banned,
+      };
+
+      updateSelectedUser(updatedUser);
+
+      // Tải lại danh sách để đồng bộ dữ liệu từ database.
+      await fetchUsers();
+
+      // Giữ thông tin chi tiết đã cập nhật sau khi tải lại.
+      setSelectedUser(updatedUser);
+
+      alert(
+        banned
+          ? "Đã gửi yêu cầu mở khóa tài khoản."
+          : "Đã gửi yêu cầu khóa tài khoản.",
+      );
+    } catch (err) {
+      console.error("Lỗi thay đổi trạng thái tài khoản:", err);
+
+      alert(
+        err.response?.data?.message ||
+          "Không thể thay đổi trạng thái tài khoản. Hãy kiểm tra API khóa tài khoản ở backend.",
+      );
+    } finally {
+      setChangingStatus(false);
+    }
+  };
+
+  const selectedRole = normalizeRole(selectedUser?.role);
+  const selectedBanned = isUserBanned(selectedUser);
 
   return (
     <div className="admin-users">
@@ -93,7 +228,7 @@ export default function AdminUsers() {
         <div>
           <span className="admin-users__eyebrow">QUẢN LÝ HỆ THỐNG</span>
 
-          <h1>Khách hàng</h1>
+          <h1>Quản lý người dùng</h1>
 
           <p>
             Theo dõi thông tin và quản lý tài khoản người dùng của Lumi Shop.
@@ -118,7 +253,7 @@ export default function AdminUsers() {
           </div>
 
           <div>
-            <span>Tài khoản tìm thấy</span>
+            <span>Tài khoản</span>
             <strong>{users.length}</strong>
           </div>
         </div>
@@ -150,7 +285,7 @@ export default function AdminUsers() {
         <div className="admin-users__panel-header">
           <div>
             <h2>Danh sách tài khoản</h2>
-            <p>Tra cứu thông tin người dùng trong hệ thống.</p>
+            <p>Tra cứu, xem chi tiết và quản lý trạng thái tài khoản.</p>
           </div>
         </div>
 
@@ -160,7 +295,7 @@ export default function AdminUsers() {
 
             <input
               type="search"
-              placeholder="Tìm tên, email hoặc số điện thoại..."
+              placeholder="Tìm tên, email, số điện thoại..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
@@ -174,6 +309,16 @@ export default function AdminUsers() {
             <option value="">Tất cả vai trò</option>
             <option value="USER">Khách hàng</option>
             <option value="ADMIN">Quản trị viên</option>
+          </select>
+
+          <select
+            aria-label="Lọc trạng thái tài khoản"
+            value={status}
+            onChange={(event) => setStatus(event.target.value)}
+          >
+            <option value="">Tất cả trạng thái</option>
+            <option value="ACTIVE">Đang hoạt động</option>
+            <option value="BANNED">Đã khóa</option>
           </select>
         </div>
 
@@ -195,6 +340,7 @@ export default function AdminUsers() {
                 <th>Email</th>
                 <th>Số điện thoại</th>
                 <th>Vai trò</th>
+                <th>Trạng thái</th>
                 <th>Ngày tạo</th>
                 <th>Chi tiết</th>
               </tr>
@@ -203,76 +349,106 @@ export default function AdminUsers() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="6" className="admin-users__message">
+                  <td colSpan={7} className="admin-users__message">
                     <RefreshCw className="admin-users__spinner" size={22} />
                     Đang tải danh sách...
                   </td>
                 </tr>
               ) : error ? (
                 <tr>
-                  <td colSpan="6" className="admin-users__message">
+                  <td colSpan={7} className="admin-users__message">
                     Không thể hiển thị dữ liệu.
                   </td>
                 </tr>
-              ) : users.length === 0 ? (
+              ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="admin-users__message">
-                    Không tìm thấy tài khoản nào.
+                  <td colSpan={7} className="admin-users__message">
+                    Không tìm thấy tài khoản phù hợp.
                   </td>
                 </tr>
               ) : (
-                users.map((user) => (
-                  <tr key={user.id}>
-                    <td>
-                      <div className="admin-users__identity">
-                        <div className="admin-users__avatar">
-                          {getInitials(user.name)}
+                filteredUsers.map((user) => {
+                  const userRole = normalizeRole(user.role);
+                  const banned = isUserBanned(user);
+
+                  return (
+                    <tr key={user.id}>
+                      <td>
+                        <div className="admin-users__identity">
+                          <div className="admin-users__avatar">
+                            {getInitials(
+                              user.name || user.full_name || user.username,
+                            )}
+                          </div>
+
+                          <div>
+                            <strong>
+                              {user.name ||
+                                user.full_name ||
+                                user.username ||
+                                "Chưa cập nhật"}
+                            </strong>
+                            <span>ID: {user.id}</span>
+                          </div>
                         </div>
+                      </td>
 
-                        <div>
-                          <strong>{user.name || "Chưa cập nhật"}</strong>
-                          <span>ID: {user.id}</span>
-                        </div>
-                      </div>
-                    </td>
+                      <td>{user.email || "—"}</td>
+                      <td>{user.phone || "—"}</td>
 
-                    <td>{user.email || "—"}</td>
+                      <td>
+                        <span
+                          className={`admin-users__role ${
+                            userRole === "ADMIN"
+                              ? "admin-users__role--admin"
+                              : "admin-users__role--user"
+                          }`}
+                        >
+                          {userRole === "ADMIN"
+                            ? "Quản trị viên"
+                            : userRole === "USER"
+                              ? "Khách hàng"
+                              : user.role || "Chưa xác định"}
+                        </span>
+                      </td>
 
-                    <td>{user.phone || "—"}</td>
+                      <td>
+                        <span
+                          className={`admin-users__status ${
+                            banned
+                              ? "admin-users__status--banned"
+                              : "admin-users__status--active"
+                          }`}
+                        >
+                          {banned ? "Đã khóa" : "Hoạt động"}
+                        </span>
+                      </td>
 
-                    <td>
-                      <span
-                        className={`admin-users__role ${
-                          user.role === "ADMIN"
-                            ? "admin-users__role--admin"
-                            : "admin-users__role--user"
-                        }`}
-                      >
-                        {user.role === "ADMIN" ? "Quản trị viên" : "Khách hàng"}
-                      </span>
-                    </td>
+                      <td>{formatDate(user.createdAt || user.created_at)}</td>
 
-                    <td>{formatDate(user.createdAt || user.created_at)}</td>
-
-                    <td>
-                      <button
-                        type="button"
-                        className="admin-users__detail-btn"
-                        aria-label={`Xem ${user.name || "người dùng"}`}
-                        onClick={() => setSelectedUser(user)}
-                      >
-                        <Eye size={17} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                      <td>
+                        <button
+                          type="button"
+                          className="admin-users__detail-btn"
+                          aria-label={`Xem ${
+                            user.name || user.email || "người dùng"
+                          }`}
+                          onClick={() => setSelectedUser(user)}
+                        >
+                          <Eye size={17} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
 
         <div className="admin-users__footer">
-          Hiển thị {loading ? 0 : users.length} tài khoản
+          Hiển thị {loading ? 0 : filteredUsers.length} / {users.length} tài
+          khoản
         </div>
       </section>
 
@@ -309,19 +485,42 @@ export default function AdminUsers() {
 
             <div className="admin-users__profile">
               <div className="admin-users__profile-avatar">
-                {getInitials(selectedUser.name)}
+                {getInitials(
+                  selectedUser.name ||
+                    selectedUser.full_name ||
+                    selectedUser.username,
+                )}
               </div>
 
-              <h3>{selectedUser.name || "Chưa cập nhật"}</h3>
+              <h3>
+                {selectedUser.name ||
+                  selectedUser.full_name ||
+                  selectedUser.username ||
+                  "Chưa cập nhật"}
+              </h3>
 
               <span
                 className={`admin-users__role ${
-                  selectedUser.role === "ADMIN"
+                  selectedRole === "ADMIN"
                     ? "admin-users__role--admin"
                     : "admin-users__role--user"
                 }`}
               >
-                {selectedUser.role === "ADMIN" ? "Quản trị viên" : "Khách hàng"}
+                {selectedRole === "ADMIN"
+                  ? "Quản trị viên"
+                  : selectedRole === "USER"
+                    ? "Khách hàng"
+                    : selectedUser.role || "Chưa xác định"}
+              </span>
+
+              <span
+                className={`admin-users__status ${
+                  selectedBanned
+                    ? "admin-users__status--banned"
+                    : "admin-users__status--active"
+                }`}
+              >
+                {selectedBanned ? "Đã khóa" : "Đang hoạt động"}
               </span>
             </div>
 
@@ -346,7 +545,11 @@ export default function AdminUsers() {
                 <MapPin size={18} />
                 <section>
                   <span>Địa chỉ</span>
-                  <strong>{selectedUser.address || "Chưa cập nhật"}</strong>
+                  <strong>
+                    {selectedUser.address ||
+                      selectedUser.full_address ||
+                      "Chưa cập nhật"}
+                  </strong>
                 </section>
               </div>
 
@@ -363,13 +566,40 @@ export default function AdminUsers() {
               </div>
             </div>
 
-            <button
-              type="button"
-              className="admin-users__modal-done"
-              onClick={() => setSelectedUser(null)}
-            >
-              Đóng
-            </button>
+            <div className="admin-users__modal-actions">
+              {selectedRole !== "ADMIN" && (
+                <button
+                  type="button"
+                  className={`admin-users__ban-btn ${
+                    selectedBanned ? "admin-users__ban-btn--unban" : ""
+                  }`}
+                  onClick={handleToggleBan}
+                  disabled={changingStatus}
+                >
+                  {changingStatus ? (
+                    <RefreshCw size={17} className="admin-users__spinner" />
+                  ) : selectedBanned ? (
+                    <CheckCircle size={17} />
+                  ) : (
+                    <Ban size={17} />
+                  )}
+
+                  {changingStatus
+                    ? "Đang xử lý..."
+                    : selectedBanned
+                      ? "Mở khóa tài khoản"
+                      : "Khóa tài khoản"}
+                </button>
+              )}
+
+              <button
+                type="button"
+                className="admin-users__modal-done"
+                onClick={() => setSelectedUser(null)}
+              >
+                Đóng
+              </button>
+            </div>
           </section>
         </div>
       )}

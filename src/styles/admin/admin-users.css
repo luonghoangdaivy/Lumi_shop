@@ -504,3 +504,77 @@
     padding: 13px;
   }
 }
+
+/* Trạng thái tài khoản */
+.admin-users__status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.admin-users__status--active {
+  color: #167647;
+  background: #e8f7ee;
+}
+
+.admin-users__status--banned {
+  color: #b42318;
+  background: #fef0ef;
+}
+
+/* Các nút ở cuối modal */
+.admin-users__modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.admin-users__modal-actions .admin-users__modal-done {
+  flex: 1;
+}
+
+.admin-users__ban-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid #f0b8b4;
+  border-radius: 8px;
+  color: #b42318;
+  background: #fff5f4;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.admin-users__ban-btn:hover:not(:disabled) {
+  background: #ffe5e2;
+}
+
+.admin-users__ban-btn--unban {
+  color: #167647;
+  border-color: #b7e2c7;
+  background: #effaf3;
+}
+
+.admin-users__ban-btn--unban:hover:not(:disabled) {
+  background: #dcf5e5;
+}
+
+.admin-users__ban-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-users__status + .admin-users__status {
+  margin-top: 8px;
+}
